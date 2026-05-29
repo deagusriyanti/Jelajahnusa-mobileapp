@@ -75,7 +75,7 @@ class _DetailScreenState extends State<DetailScreen> {
                     icon: const Icon(Icons.fullscreen, color: Colors.white),
                     onPressed: () {
                       Navigator.push(
-                        context, 
+                        context,
                         MaterialPageRoute(
                           builder: (_) => FullscreenImageScreen(
                             imageBase64: widget.imageBase64,
@@ -164,4 +164,4 @@ class _DetailScreenState extends State<DetailScreen> {
       ),
     );
   }
-}            
+}

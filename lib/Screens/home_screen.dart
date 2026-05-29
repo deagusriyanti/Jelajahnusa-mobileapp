@@ -1,11 +1,12 @@
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:jelajah_nusa/screens/add_post_screen.dart';
-import 'package:jelajah_nusa/screens/detail_screen.dart';
-import 'package:jelajah_nusa/screens/sign_in_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:jelajah_nusa/screens/add_post_screen.dart';
+import 'package:jelajah_nusa/screens/detail_screen.dart';
+import 'package:jelajah_nusa/screens/sign_in_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (diff.inHours < 48) {
       return '1 day ago';
     } else {
-      return DateFormat('dd/MM/yyyy').format(dateTime);
+      return DateFormat('MMMM dd, yyyy').format(dateTime);
     }
   }
 
@@ -37,200 +38,233 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => SignInScreen()),
-      (route) => false, // Hapus semua route sebelumnya
+      (route) => false,
     );
   }
 
-  void _showCategoryFilter() async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.75,
-            child: ListView(
-              padding: const EdgeInsets.only(bottom: 24),
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.clear),
-                  title: const Text('Semua Kategori'),
-                  onTap: () => Navigator.pop(context, null),
-                ),
-                const Divider(),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> toggleLike(String postId, List likedBy) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
+    if (likedBy.contains(uid)) {
+      await postRef.update({
+        'likedBy': FieldValue.arrayRemove([uid]),
+        'likes': FieldValue.increment(-1),
+      });
+    } else {
+      await postRef.update({
+        'likedBy': FieldValue.arrayUnion([uid]),
+        'likes': FieldValue.increment(1),
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Fasum',
-          style: TextStyle(
-            color: Colors.green[600],
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: signOut),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const AddPostScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {});
-        },
-        child: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('posts')
-              .orderBy('createdAt', descending: true)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final posts = snapshot.data!.docs;
-
-            return ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                final data = posts[index].data();
-                final imageBase64 = data['image'];
-                final description = data['description'];
-                final createdAtStr = data['createdAt'];
-                final fullName = data['fullName'] ?? 'Anonim';
-                final latitude = data['latitude'];
-                final longitude = data['longitude'];
-                final category = data['category'] ?? 'Lainnya';
-                final createdAt = DateTime.parse(createdAtStr);
-                String heroTag =
-                    'fasum-image-${createdAt.millisecondsSinceEpoch}';
-
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetailScreen(
-                          imageBase64: imageBase64,
-                          description: description ?? '',
-                          createdAt: createdAt,
-                          fullName: fullName,
-                          latitude: latitude,
-                          longitude: longitude,
-                          category: category,
-                          heroTag: heroTag,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              const CircleAvatar(
-                                radius: 22,
-                                child: Icon(Icons.person),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      fullName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    Text(
-                                      formatTime(createdAt),
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (imageBase64 != null)
-                          Hero(
-                            tag: heroTag,
-                            child: Image.memory(
-                              base64Decode(imageBase64),
-                              height: 240,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                description ?? '',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 15),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: const [
-                                  Icon(
-                                    Icons.favorite_border,
-                                    color: Colors.red,
-                                  ),
-                                  SizedBox(width: 5),
-                                  Text("0"),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+      backgroundColor: const Color(0xFFEAF1F2),
+      body: SafeArea(
+        child: Column(
+          children: [
+            /// TOP BAR
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFBFEAEA), Color(0xFFEAF1F2)],
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "JelajahNusa",
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF005B7F),
                     ),
                   ),
-                );
-              },
-            );
-          },
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddPostScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF005B7F)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.add, color: Color(0xFF005B7F)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            /// POST LIST
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {});
+                },
+                child: StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('posts')
+                      .orderBy('createdAt', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final posts = snapshot.data!.docs;
+                    return ListView.builder(
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        final data = posts[index].data();
+                        final imageBase64 = data['image'];
+                        final description = data['description'];
+                        final createdAt = DateTime.parse(data['createdAt']);
+                        final fullName = data['fullName'] ?? 'Anonymous';
+                        final latitude = data['latitude'];
+                        final longitude = data['longitude'];
+                        String heroTag = 'image-$index';
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailScreen(
+                                  imageBase64: imageBase64,
+                                  description: description,
+                                  createdAt: createdAt,
+                                  fullName: fullName,
+                                  latitude: latitude,
+                                  longitude: longitude,
+                                  category: '',
+                                  heroTag: heroTag,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            color: const Color(0xFFEAF1F2),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                /// USER INFO
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.account_circle_outlined,
+                                        size: 32,
+                                        color: Color(0xFF005B7F),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        fullName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Color(0xFF005B7F),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        formatTime(createdAt),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                /// IMAGE
+                                Hero(
+                                  tag: heroTag,
+                                  child: Image.memory(
+                                    base64Decode(imageBase64),
+                                    height: 250,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+
+                                /// DESCRIPTION
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 16,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          description,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF007A8A),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      GestureDetector(
+                                        onTap: () {
+                                          toggleLike(
+                                            posts[index].id,
+                                            data['likedBy'] ?? [],
+                                          );
+                                        },
+                                        child: Icon(
+                                          (data['likedBy'] ?? []).contains(
+                                                FirebaseAuth
+                                                    .instance
+                                                    .currentUser!
+                                                    .uid,
+                                              )
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: Colors.red,
+                                          size: 34,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        "${data['likes'] ?? 0}",
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

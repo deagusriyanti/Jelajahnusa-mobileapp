@@ -5,10 +5,7 @@ import 'package:flutter/material.dart';
 class FullscreenImageScreen extends StatelessWidget {
   final String imageBase64;
 
-  const FullscreenImageScreen({
-    super.key, 
-    required this.imageBase64,
-  });
+  const FullscreenImageScreen({super.key, required this.imageBase64});
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +17,7 @@ class FullscreenImageScreen extends StatelessWidget {
         },
         child: Center(
           child: InteractiveViewer(
-            child: Image.memory(
-              base64Decode(imageBase64),
-              fit: BoxFit.contain,
-            ),
+            child: Image.memory(base64Decode(imageBase64), fit: BoxFit.contain),
           ),
         ),
       ),

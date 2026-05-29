@@ -64,8 +64,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '747495208216',
     projectId: 'jelajahnusa',
     storageBucket: 'jelajahnusa.firebasestorage.app',
-    androidClientId: '747495208216-7smcfo2v2thp14q1guo93ubdctu989nr.apps.googleusercontent.com',
-    iosClientId: '747495208216-nei9mlnodpultbg6akgaop7k282fgbig.apps.googleusercontent.com',
+    androidClientId:
+        '747495208216-7smcfo2v2thp14q1guo93ubdctu989nr.apps.googleusercontent.com',
+    iosClientId:
+        '747495208216-nei9mlnodpultbg6akgaop7k282fgbig.apps.googleusercontent.com',
     iosBundleId: 'com.example.jelajahNusa',
   );
 
@@ -75,8 +77,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '747495208216',
     projectId: 'jelajahnusa',
     storageBucket: 'jelajahnusa.firebasestorage.app',
-    androidClientId: '747495208216-7smcfo2v2thp14q1guo93ubdctu989nr.apps.googleusercontent.com',
-    iosClientId: '747495208216-nei9mlnodpultbg6akgaop7k282fgbig.apps.googleusercontent.com',
+    androidClientId:
+        '747495208216-7smcfo2v2thp14q1guo93ubdctu989nr.apps.googleusercontent.com',
+    iosClientId:
+        '747495208216-nei9mlnodpultbg6akgaop7k282fgbig.apps.googleusercontent.com',
     iosBundleId: 'com.example.jelajahNusa',
   );
 
@@ -89,5 +93,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'jelajahnusa.firebasestorage.app',
     measurementId: 'G-JGJ7LTD8Y9',
   );
-
 }

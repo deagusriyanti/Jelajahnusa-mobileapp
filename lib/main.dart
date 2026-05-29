@@ -36,7 +36,7 @@ Future<void> showBasicNotification(String? title, String? body) async {
     priority: Priority.high,
     showWhen: true,
   );
-   final platform = NotificationDetails(android: android);
+  final platform = NotificationDetails(android: android);
   await flutterLocalNotificationsPlugin.show(0, title, body, platform);
 }
 
