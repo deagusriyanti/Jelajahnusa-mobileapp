@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jelajah_nusa/Screens/main_screen.dart';
-import 'package:jelajah_nusa/screens/sign_up_screen.dart';
+import 'package:jelajah_nusa/Screens/sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});

@@ -26,6 +26,8 @@ dependencies:
   firebase_messaging: ^16.2.1
   flutter_local_notifications: ^17.2.2
   google_sign_in: ^7.2.0
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
@@ -46,4 +48,6 @@ flutter:
     - assets/jelajahnusa_icon_512.png
     - assets/google_icon.png
     - assets/bali.jpeg
+    - assets/alam.jpeg
+    - assets/profile.jpeg
     
