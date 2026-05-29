@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:jelajah_nusa/Screens/main_screen.dart';
 import 'package:jelajah_nusa/screens/home_screen.dart';
 import 'package:jelajah_nusa/screens/sign_up_screen.dart';
 
@@ -36,7 +37,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const MainScreen()),
       );
     } on FirebaseAuthException catch (e) {
       _showMessage(_getErrorMessage(e.code));
@@ -86,7 +87,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const MainScreen()),
         );
       }
     } catch (e) {

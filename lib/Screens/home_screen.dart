@@ -15,28 +15,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String? selectedCategory;
-
-  List<String> categories = [
-    'Jalan Rusak',
-    'Marka Pudar',
-    'Lampu Mati',
-    'Trotoar Rusak',
-    'Rambu Rusak',
-    'Jembatan Rusak',
-    'Sampah Menumpuk',
-    'Saluran Tersumbat',
-    'Sungai Tercemar',
-    'Sampah Sungai',
-    'Pohon Tumbang',
-    'Taman Rusak',
-    'Fasilitas Rusak',
-    'Pipa Bocor',
-    'Vandalisme',
-    'Banjir',
-    'Lainnya',
-  ];
-
   String formatTime(DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
@@ -64,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCategoryFilter() async {
-    final result = await showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -80,49 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ListTile(
                   leading: const Icon(Icons.clear),
                   title: const Text('Semua Kategori'),
-                  onTap:
-                      () => Navigator.pop(
-                        context,
-                        null,
-                      ), // Null untuk memilih semua kategori
+                  onTap: () => Navigator.pop(context, null),
                 ),
                 const Divider(),
-                ...categories.map(
-                  (category) => ListTile(
-                    title: Text(category),
-                    trailing:
-                        selectedCategory == category
-                            ? Icon(
-                              Icons.check,
-                              color: Theme.of(context).colorScheme.primary,
-                            )
-                            : null,
-                    onTap:
-                        () => Navigator.pop(
-                          context,
-                          category,
-                        ), // Kategori yang dipilih
-                  ),
-                ),
               ],
             ),
           ),
         );
       },
     );
-
-    if (result != null) {
-      setState(() {
-        selectedCategory =
-            result; // Set kategori yang dipilih atau null untuk Semua Kategori
-      });
-    } else {
-      // Jika result adalah null, berarti memilih Semua Kategori
-      setState(() {
-        selectedCategory =
-            null; // Reset ke null untuk menampilkan semua kategori
-      });
-    }
   }
 
   @override
@@ -138,46 +82,32 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: _showCategoryFilter,
-            icon: const Icon(Icons.filter_list),
-            tooltip: 'Filter Kategori',
-          ),
-          IconButton(
-            onPressed: () {
-              signOut();
-            },
-            icon: const Icon(Icons.logout),
-          ),
+          IconButton(icon: const Icon(Icons.logout), onPressed: signOut),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const AddPostScreen()),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {});
         },
         child: StreamBuilder(
-          stream:
-              FirebaseFirestore.instance
-                  .collection('posts')
-                  .orderBy('createdAt', descending: true)
-                  .snapshots(),
+          stream: FirebaseFirestore.instance
+              .collection('posts')
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
-            final posts =
-                snapshot.data!.docs.where((doc) {
-                  final data = doc.data();
-                  final category = data['category'] ?? 'Lainnya';
-                  return selectedCategory == null ||
-                      selectedCategory == category;
-                }).toList();
 
-            if (posts.isEmpty) {
-              return const Center(
-                child: Text("Tidak ada laporan untuk kategori ini."),
-              );
-            }
+            final posts = snapshot.data!.docs;
 
             return ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -200,78 +130,95 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) => DetailScreen(
-                              imageBase64: imageBase64,
-                              description: description ?? '',
-                              createdAt: createdAt,
-                              fullName: fullName,
-                              latitude: latitude,
-                              longitude: longitude,
-                              category: category,
-                              heroTag: heroTag,
-                            ),
+                        builder: (context) => DetailScreen(
+                          imageBase64: imageBase64,
+                          description: description ?? '',
+                          createdAt: createdAt,
+                          fullName: fullName,
+                          latitude: latitude,
+                          longitude: longitude,
+                          category: category,
+                          heroTag: heroTag,
+                        ),
                       ),
                     );
                   },
                   child: Card(
-                    elevation: 1,
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    shadowColor: Theme.of(context).colorScheme.shadow,
-                    margin: const EdgeInsets.all(10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (imageBase64 != null)
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(10),
-                            ),
-                            child: Hero(
-                              tag: heroTag,
-                              child: Image.memory(
-                                base64Decode(imageBase64),
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: 200,
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 22,
+                                child: Icon(Icons.person),
                               ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      fullName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      formatTime(createdAt),
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (imageBase64 != null)
+                          Hero(
+                            tag: heroTag,
+                            child: Image.memory(
+                              base64Decode(imageBase64),
+                              height: 240,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
+                          padding: const EdgeInsets.all(14),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    fullName,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              Text(
+                                description ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: const [
+                                  Icon(
+                                    Icons.favorite_border,
+                                    color: Colors.red,
                                   ),
-                                  Text(
-                                    formatTime(createdAt),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    description ?? '',
-                                    style: const TextStyle(fontSize: 16),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  SizedBox(width: 5),
+                                  Text("0"),
                                 ],
                               ),
                             ],
@@ -285,14 +232,6 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (context) => const AddPostScreen()));
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:jelajah_nusa/Screens/main_screen.dart';
 import 'package:jelajah_nusa/screens/home_screen.dart';
 import 'package:jelajah_nusa/screens/sign_in_screen.dart';
 
@@ -46,7 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const MainScreen()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {

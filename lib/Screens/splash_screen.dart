@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:jelajah_nusa/Screens/Home_screen.dart';
 import 'package:jelajah_nusa/Screens/Sign_in_screen.dart';
+import 'package:jelajah_nusa/Screens/main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -49,8 +50,8 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            user != null ? const HomeScreen() : const SignInScreen(),
+       builder: (_) =>
+         user != null ? const MainScreen() : const SignInScreen(),
       ),
     );
   }
