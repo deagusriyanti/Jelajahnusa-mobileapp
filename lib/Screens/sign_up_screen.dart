@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jelajah_nusa/Screens/main_screen.dart';
-import 'package:jelajah_nusa/screens/home_screen.dart';
 import 'package:jelajah_nusa/screens/sign_in_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -90,15 +89,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return InputDecoration(
       labelText: label,
       floatingLabelBehavior: FloatingLabelBehavior.always,
-      labelStyle: TextStyle(
-        color: Colors.grey.shade600,
+      labelStyle: const TextStyle(
+        color: Color(0xFF007C89),
         fontSize: 11,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w800,
       ),
       floatingLabelStyle: const TextStyle(
-        color: Color(0xFF006C7A),
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
+        color: Color(0xFF007C89),
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
       ),
       suffixIcon: suffixIcon,
       border: UnderlineInputBorder(
@@ -108,11 +107,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
         borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Color(0xFF006C7A), width: 1.4),
+        borderSide: BorderSide(color: Color(0xFF007C89), width: 1.4),
       ),
       errorStyle: const TextStyle(fontSize: 10),
-      contentPadding: const EdgeInsets.only(top: 18, bottom: 6),
+      contentPadding: const EdgeInsets.only(top: 20, bottom: 8),
       isDense: true,
+    );
+  }
+
+  Widget _circleIconButton({required Widget child, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Center(child: child),
+      ),
     );
   }
 
@@ -144,6 +159,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Transform.translate(
                   offset: const Offset(0, -28),
                   child: Container(
+                    width: double.infinity,
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height - 230,
+                    ),
                     padding: const EdgeInsets.fromLTRB(28, 18, 28, 20),
                     decoration: const BoxDecoration(
                       color: Color(0xFFEAF5F6),
@@ -171,29 +190,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: const Color(
-                                    0xFF006C7A,
+                                    0xFF007C89,
                                   ).withOpacity(0.35),
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
-
                             const SizedBox(width: 42),
-
                             const Text(
-                              'Sign Up',
+                              'Signup',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF006C7A),
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.3,
+                                color: Color(0xFF007C89),
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 34),
 
                         TextFormField(
                           controller: _usernameController,
@@ -206,7 +221,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 24),
 
                         TextFormField(
                           controller: _emailController,
@@ -225,7 +240,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 24),
 
                         TextFormField(
                           controller: _passwordController,
@@ -233,8 +248,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           decoration: _figmaInputDecoration(
                             label: 'Password',
                             suffixIcon: IconButton(
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
                               icon: Icon(
                                 _isPasswordVisible
                                     ? Icons.visibility
@@ -260,7 +273,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 34),
+                        const SizedBox(height: 36),
 
                         SizedBox(
                           width: double.infinity,
@@ -268,7 +281,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _signUp,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF006C7A),
+                              backgroundColor: const Color(0xFF007C89),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
@@ -288,13 +301,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 34),
 
                         Row(
                           children: [
@@ -317,20 +330,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: Divider(color: Colors.grey.shade300),
                             ),
                             const SizedBox(width: 8),
-                            Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.grey.shade300),
+
+                            _circleIconButton(
+                              child: Image.asset(
+                                'assets/google_icon.png',
+                                width: 22,
+                                height: 22,
                               ),
-                              child: Center(
-                                child: Image.asset(
-                                  'assets/google_icon.png',
-                                  width: 22,
-                                  height: 22,
-                                ),
+                            ),
+
+                            const SizedBox(width: 10),
+
+                            _circleIconButton(
+                              onTap: () {
+                                _showMessage(
+                                  'Fitur login nomor telepon akan dibuat',
+                                );
+                              },
+                              child: const Icon(
+                                Icons.phone_android,
+                                size: 20,
+                                color: Color(0xFF007C89),
                               ),
                             ),
                           ],
