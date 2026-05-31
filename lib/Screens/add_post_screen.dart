@@ -35,128 +35,129 @@ class _AddPostScreenState extends State<AddPostScreen> {
   }
 
   String getProvinceCategory(String province) {
-  switch (province.toLowerCase()) {
-    case 'aceh':
-      return 'Aceh';
+    switch (province.toLowerCase()) {
+      case 'aceh':
+        return 'Aceh';
 
-    case 'sumatera utara':
-      return 'Sumatera Utara';
+      case 'sumatera utara':
+        return 'Sumatera Utara';
 
-    case 'sumatera barat':
-      return 'Sumatera Barat';
+      case 'sumatera barat':
+        return 'Sumatera Barat';
 
-    case 'riau':
-      return 'Riau';
+      case 'riau':
+        return 'Riau';
 
-    case 'kepulauan riau':
-      return 'Kepulauan Riau';
+      case 'kepulauan riau':
+        return 'Kepulauan Riau';
 
-    case 'jambi':
-      return 'Jambi';
+      case 'jambi':
+        return 'Jambi';
 
-    case 'sumatera selatan':
-      return 'Sumatera Selatan';
+      case 'sumatera selatan':
+        return 'Sumatera Selatan';
 
-    case 'bengkulu':
-      return 'Bengkulu';
+      case 'bengkulu':
+        return 'Bengkulu';
 
-    case 'bangka belitung':
-    case 'kepulauan bangka belitung':
-      return 'Bangka Belitung';
+      case 'bangka belitung':
+      case 'kepulauan bangka belitung':
+        return 'Bangka Belitung';
 
-    case 'lampung':
-      return 'Lampung';
+      case 'lampung':
+        return 'Lampung';
 
-    case 'dki jakarta':
-    case 'jakarta':
-      return 'DKI Jakarta';
+      case 'dki jakarta':
+      case 'jakarta':
+        return 'DKI Jakarta';
 
-    case 'banten':
-      return 'Banten';
+      case 'banten':
+        return 'Banten';
 
-    case 'jawa barat':
-      return 'Jawa Barat';
+      case 'jawa barat':
+        return 'Jawa Barat';
 
-    case 'jawa tengah':
-      return 'Jawa Tengah';
+      case 'jawa tengah':
+        return 'Jawa Tengah';
 
-    case 'daerah istimewa yogyakarta':
-    case 'yogyakarta':
-      return 'Yogyakarta';
+      case 'daerah istimewa yogyakarta':
+      case 'yogyakarta':
+        return 'Yogyakarta';
 
-    case 'jawa timur':
-      return 'Jawa Timur';
+      case 'jawa timur':
+        return 'Jawa Timur';
 
-    case 'kalimantan barat':
-      return 'Kalimantan Barat';
+      case 'kalimantan barat':
+        return 'Kalimantan Barat';
 
-    case 'kalimantan tengah':
-      return 'Kalimantan Tengah';
+      case 'kalimantan tengah':
+        return 'Kalimantan Tengah';
 
-    case 'kalimantan selatan':
-      return 'Kalimantan Selatan';
+      case 'kalimantan selatan':
+        return 'Kalimantan Selatan';
 
-    case 'kalimantan timur':
-      return 'Kalimantan Timur';
+      case 'kalimantan timur':
+        return 'Kalimantan Timur';
 
-    case 'kalimantan utara':
-      return 'Kalimantan Utara';
+      case 'kalimantan utara':
+        return 'Kalimantan Utara';
 
-    case 'sulawesi utara':
-      return 'Sulawesi Utara';
+      case 'sulawesi utara':
+        return 'Sulawesi Utara';
 
-    case 'gorontalo':
-      return 'Gorontalo';
+      case 'gorontalo':
+        return 'Gorontalo';
 
-    case 'sulawesi tengah':
-      return 'Sulawesi Tengah';
+      case 'sulawesi tengah':
+        return 'Sulawesi Tengah';
 
-    case 'sulawesi barat':
-      return 'Sulawesi Barat';
+      case 'sulawesi barat':
+        return 'Sulawesi Barat';
 
-    case 'sulawesi selatan':
-      return 'Sulawesi Selatan';
+      case 'sulawesi selatan':
+        return 'Sulawesi Selatan';
 
-    case 'sulawesi tenggara':
-      return 'Sulawesi Tenggara';
+      case 'sulawesi tenggara':
+        return 'Sulawesi Tenggara';
 
-    case 'bali':
-      return 'Bali';
+      case 'bali':
+        return 'Bali';
 
-    case 'nusa tenggara barat':
-      return 'Nusa Tenggara Barat';
+      case 'nusa tenggara barat':
+        return 'Nusa Tenggara Barat';
 
-    case 'nusa tenggara timur':
-      return 'Nusa Tenggara Timur';
+      case 'nusa tenggara timur':
+        return 'Nusa Tenggara Timur';
 
-    case 'maluku':
-      return 'Maluku';
+      case 'maluku':
+        return 'Maluku';
 
-    case 'maluku utara':
-      return 'Maluku Utara';
+      case 'maluku utara':
+        return 'Maluku Utara';
 
-    case 'papua':
-      return 'Papua';
+      case 'papua':
+        return 'Papua';
 
-    case 'papua selatan':
-      return 'Papua Selatan';
+      case 'papua selatan':
+        return 'Papua Selatan';
 
-    case 'papua tengah':
-      return 'Papua Tengah';
+      case 'papua tengah':
+        return 'Papua Tengah';
 
-    case 'papua pegunungan':
-      return 'Papua Pegunungan';
+      case 'papua pegunungan':
+        return 'Papua Pegunungan';
 
-    case 'papua barat':
-      return 'Papua Barat';
+      case 'papua barat':
+        return 'Papua Barat';
 
-    case 'papua barat daya':
-      return 'Papua Barat Daya';
+      case 'papua barat daya':
+        return 'Papua Barat Daya';
 
-    default:
-      return province;
+      default:
+        return province;
+    }
   }
-}
+
   Future<void> _pickImage(ImageSource source) async {
     try {
       final pickedFile = await _picker.pickImage(source: source);
@@ -232,24 +233,19 @@ class _AddPostScreenState extends State<AddPostScreen> {
     }
 
     if (_latitude == null || _longitude == null) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text(
-        'Silakan pilih lokasi terlebih dahulu',
-      ),
-    ),
-  );
-  return;
-}
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih lokasi terlebih dahulu')),
+      );
+      return;
+    }
     setState(() => _isUploading = true);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final userDoc = await FirebaseFirestore.instance
-    .collection('users')
-    .doc(uid)
-    .get();
+        .collection('users')
+        .doc(uid)
+        .get();
 
-final username =
-    userDoc.data()?['username'] ?? 'Unknown User';
+    final username = userDoc.data()?['username'] ?? 'Unknown User';
     if (uid == null) {
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(
@@ -257,26 +253,23 @@ final username =
       ).showSnackBar(const SnackBar(content: Text('User not found.')));
       return;
     }
-   try {
-  String category = "Lainnya";
+    try {
+      String category = "Lainnya";
 
-  if (_latitude != null && _longitude != null) {
-    final placemarks =
-        await placemarkFromCoordinates(
-      _latitude!,
-      _longitude!,
-    );
+      if (_latitude != null && _longitude != null) {
+        final placemarks = await placemarkFromCoordinates(
+          _latitude!,
+          _longitude!,
+        );
 
-    if (placemarks.isNotEmpty) {
-      category = getProvinceCategory(
-        placemarks.first.administrativeArea ?? '',
-      );
-    }
-  }
+        if (placemarks.isNotEmpty) {
+          category = getProvinceCategory(
+            placemarks.first.administrativeArea ?? '',
+          );
+        }
+      }
 
-  await FirebaseFirestore.instance
-      .collection('posts')
-      .add({
+      await FirebaseFirestore.instance.collection('posts').add({
         'title': _titleController.text,
         'description': _descriptionController.text,
         'fullName': username,
@@ -287,7 +280,7 @@ final username =
         'longitude': _longitude,
         'likes': 0,
         'likedBy': [],
-        'createdAt': DateTime.now().toIso8601String(),
+        'createdAt': FieldValue.serverTimestamp(),
         'userId': uid,
       });
       if (!mounted) return;
@@ -402,21 +395,20 @@ final username =
                   ),
                   GestureDetector(
                     onTap: () async {
-                          final LatLng? pickedLocation =
-                              await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const PickLocationScreen(),
-                            ),
-                          );
+                      final LatLng? pickedLocation = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PickLocationScreen(),
+                        ),
+                      );
 
-                          if (pickedLocation != null) {
-                            setState(() {
-                              _latitude = pickedLocation.latitude;
-                              _longitude = pickedLocation.longitude;
-                            });
-                          }
-                        },
+                      if (pickedLocation != null) {
+                        setState(() {
+                          _latitude = pickedLocation.latitude;
+                          _longitude = pickedLocation.longitude;
+                        });
+                      }
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 25,

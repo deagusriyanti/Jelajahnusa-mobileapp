@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -53,6 +54,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   List<String> filteredProvinces = [];
 
+  String selectedProvince = '';
+
   @override
   void initState() {
     super.initState();
@@ -67,10 +70,7 @@ class _SearchScreenState extends State<SearchScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color.fromARGB(255, 194, 238, 238),
-              Color.fromARGB(255, 255, 255, 255),
-            ],
+            colors: [Color.fromARGB(255, 194, 238, 238), Colors.white],
           ),
         ),
         child: SafeArea(
@@ -133,8 +133,9 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               const SizedBox(height: 10),
 
-              /// GRID
+              /// GRID PROVINCE
               Expanded(
+                flex: 2,
                 child: GridView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: filteredProvinces.length,
@@ -145,28 +146,35 @@ class _SearchScreenState extends State<SearchScreen> {
                     childAspectRatio: 1.4,
                   ),
                   itemBuilder: (context, index) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE6F1F2),
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 6,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            filteredProvinces[index],
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.teal,
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedProvince = filteredProvinces[index];
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE6F1F2),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 6,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Text(
+                              filteredProvinces[index],
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.teal,
+                              ),
                             ),
                           ),
                         ),
@@ -175,6 +183,58 @@ class _SearchScreenState extends State<SearchScreen> {
                   },
                 ),
               ),
+
+              /// LIST WISATA
+              if (selectedProvince.isNotEmpty)
+                Expanded(
+                  flex: 3,
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('posts')
+                        .where('category', isEqualTo: selectedProvince)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Center(
+                          child: Text('Belum ada wisata di $selectedProvince'),
+                        );
+                      }
+                      final wisata = snapshot.data!.docs;
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: wisata.length,
+                        itemBuilder: (context, index) {
+                          final data =
+                              wisata[index].data() as Map<String, dynamic>;
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: ListTile(
+                              leading: data['imageUrl'] != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.network(
+                                        data['imageUrl'],
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : null,
+                              title: Text(data['title'] ?? ''),
+                              subtitle: Text(data['location'] ?? ''),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ),

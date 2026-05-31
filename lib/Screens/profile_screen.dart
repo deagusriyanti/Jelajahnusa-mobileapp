@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jelajah_nusa/Screens/sign_in_screen.dart';
 import 'package:jelajah_nusa/theme/theme_provider.dart';
+import 'package:jelajah_nusa/Screens/history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -121,7 +122,14 @@ class ProfileScreen extends StatelessWidget {
                 context: context,
                 icon: Icons.history,
                 title: 'Post History',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HistoryScreen(),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 14),
