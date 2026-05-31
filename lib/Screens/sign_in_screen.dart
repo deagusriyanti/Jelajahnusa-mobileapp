@@ -15,7 +15,7 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
@@ -28,7 +28,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
@@ -47,7 +47,30 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<void> _resetPassword() async {
+    if (_emailController.text.trim().isEmpty) {
+      _showMessage('Masukkan email terlebih dahulu');
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
+
+      _showMessage('Link reset password telah dikirim ke email Anda');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        _showMessage('Email belum terdaftar');
+      } else if (e.code == 'invalid-email') {
+        _showMessage('Format email tidak valid');
+      } else {
+        _showMessage('Gagal mengirim email reset password');
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
     try {
       await GoogleSignIn.instance.initialize();
 
@@ -75,8 +98,9 @@ class _SignInScreenState extends State<SignInScreen> {
 
         if (!snapshot.exists) {
           await userDoc.set({
-            'fullName': user.displayName,
+            'username': user.displayName ?? 'Google User',
             'email': user.email,
+            'phone': '',
             'photoUrl': user.photoURL,
             'createdAt': Timestamp.now(),
           });
@@ -103,17 +127,19 @@ class _SignInScreenState extends State<SignInScreen> {
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found':
-        return 'User tidak ditemukan';
+        return 'Email belum terdaftar';
       case 'wrong-password':
         return 'Password salah';
       case 'invalid-email':
         return 'Format email tidak valid';
+      case 'invalid-credential':
+        return 'Email atau password salah';
       default:
         return 'Login gagal';
     }
   }
 
-  InputDecoration _figmaInputDecoration({
+  InputDecoration _inputDecoration({
     required String label,
     Widget? suffixIcon,
   }) {
@@ -146,25 +172,42 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  Widget _circleIconButton({required Widget child, VoidCallback? onTap}) {
+  Widget _authButton({
+    required Widget icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 34,
-        height: 34,
+        width: double.infinity,
+        height: 50,
         decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey.shade300),
+          color: const Color(0xFFF4F7F2),
+          borderRadius: BorderRadius.circular(25),
         ),
-        child: Center(child: child),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icon,
+            const SizedBox(width: 12),
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF14380B),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -185,7 +228,6 @@ class _SignInScreenState extends State<SignInScreen> {
                   height: 255,
                   fit: BoxFit.cover,
                 ),
-
                 Transform.translate(
                   offset: const Offset(0, -28),
                   child: Container(
@@ -241,9 +283,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 34),
 
                         TextFormField(
-                          controller: _usernameController,
+                          controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: _figmaInputDecoration(label: 'Username'),
+                          decoration: _inputDecoration(label: 'E-mail Address'),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Email wajib diisi';
@@ -257,7 +299,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
-                          decoration: _figmaInputDecoration(
+                          decoration: _inputDecoration(
                             label: 'Password',
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -282,7 +324,24 @@ class _SignInScreenState extends State<SignInScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 36),
+                        const SizedBox(height: 10),
+
+                        Center(
+                          child: GestureDetector(
+                            onTap: _resetPassword,
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                fontSize: 12,
+                                decoration: TextDecoration.underline,
+                                color: Color(0xFF007C89),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
 
                         SizedBox(
                           width: double.infinity,
@@ -316,49 +375,85 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 34),
+                        const SizedBox(height: 30),
 
                         Row(
                           children: [
                             Expanded(
                               child: Divider(color: Colors.grey.shade300),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
-                                'Sign In with :',
+                                'or',
                                 style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 11,
+                                  fontSize: 13,
+                                  color: Colors.grey,
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Divider(color: Colors.grey.shade300),
                             ),
-                            const SizedBox(width: 8),
+                          ],
+                        ),
 
-                            _circleIconButton(
-                              onTap: signInWithGoogle,
-                              child: Image.asset(
-                                'assets/google_icon.png',
-                                width: 22,
-                                height: 22,
+                        const SizedBox(height: 24),
+
+                        _authButton(
+                          onTap: _signInWithGoogle,
+                          icon: Image.asset(
+                            'assets/google_icon.png',
+                            width: 22,
+                            height: 22,
+                          ),
+                          text: 'Continue with Google',
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        _authButton(
+                          onTap: () {
+                            _showMessage(
+                              'Fitur login telepon akan segera tersedia',
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.phone_android,
+                            size: 22,
+                            color: Color(0xFF14380B),
+                          ),
+                          text: 'Continue with Phone',
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Need an account? ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
                               ),
                             ),
-
-                            const SizedBox(width: 10),
-
-                            _circleIconButton(
+                            GestureDetector(
                               onTap: () {
-                                _showMessage('Login nomor telepon akan dibuat');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SignUpScreen(),
+                                  ),
+                                );
                               },
-                              child: const Icon(
-                                Icons.phone_android,
-                                size: 20,
-                                color: Color(0xFF007C89),
+                              child: const Text(
+                                'Sign up',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF007C89),
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
                           ],

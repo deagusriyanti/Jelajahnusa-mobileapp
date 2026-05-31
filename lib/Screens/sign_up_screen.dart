@@ -16,10 +16,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
   bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -39,6 +42,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           .set({
             'username': _usernameController.text.trim(),
             'email': _emailController.text.trim(),
+            'phone': _phoneController.text.trim(),
             'createdAt': Timestamp.now(),
           });
 
@@ -115,27 +119,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _circleIconButton({required Widget child, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Center(child: child),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _usernameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -155,7 +145,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   height: 255,
                   fit: BoxFit.cover,
                 ),
-
                 Transform.translate(
                   offset: const Offset(0, -28),
                   child: Container(
@@ -221,7 +210,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 22),
 
                         TextFormField(
                           controller: _emailController,
@@ -240,7 +229,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 22),
+
+                        TextFormField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: _figmaInputDecoration(
+                            label: 'No Telepon',
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Nomor telepon wajib diisi';
+                            }
+                            if (value.trim().length < 10) {
+                              return 'Nomor telepon tidak valid';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 22),
 
                         TextFormField(
                           controller: _passwordController,
@@ -268,6 +276,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             }
                             if (value.length < 6) {
                               return 'Minimal 6 karakter';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: !_isConfirmPasswordVisible,
+                          decoration: _figmaInputDecoration(
+                            label: 'Confirm Password',
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isConfirmPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                size: 17,
+                                color: Colors.grey.shade500,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isConfirmPasswordVisible =
+                                      !_isConfirmPasswordVisible;
+                                });
+                              },
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Konfirmasi password wajib diisi';
+                            }
+                            if (value != _passwordController.text.trim()) {
+                              return 'Password tidak sama';
                             }
                             return null;
                           },
@@ -307,50 +349,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 34),
+                        const SizedBox(height: 22),
 
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(
-                              child: Divider(color: Colors.grey.shade300),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                'Sign Up with :',
-                                style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 11,
-                                ),
+                            Text(
+                              'Already have an account? ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
                               ),
                             ),
-                            Expanded(
-                              child: Divider(color: Colors.grey.shade300),
-                            ),
-                            const SizedBox(width: 8),
-
-                            _circleIconButton(
-                              child: Image.asset(
-                                'assets/google_icon.png',
-                                width: 22,
-                                height: 22,
-                              ),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            _circleIconButton(
+                            GestureDetector(
                               onTap: () {
-                                _showMessage(
-                                  'Fitur login nomor telepon akan dibuat',
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SignInScreen(),
+                                  ),
                                 );
                               },
-                              child: const Icon(
-                                Icons.phone_android,
-                                size: 20,
-                                color: Color(0xFF007C89),
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF007C89),
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
                           ],
