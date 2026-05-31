@@ -42,7 +42,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           .set({
             'username': _usernameController.text.trim(),
             'email': _emailController.text.trim(),
-            'phone': _phoneController.text.trim(),
+            'phone': _formatPhoneNumber(_phoneController.text),
             'createdAt': Timestamp.now(),
           });
 
@@ -84,6 +84,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isValidEmail(String email) {
     final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
     return regex.hasMatch(email);
+  }
+
+  String _formatPhoneNumber(String phone) {
+    String number = phone.trim();
+
+    if (number.startsWith('0')) {
+      number = '+62${number.substring(1)}';
+    } else if (!number.startsWith('+')) {
+      number = '+62$number';
+    }
+
+    return number;
   }
 
   InputDecoration _figmaInputDecoration({
@@ -241,9 +253,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             if (value == null || value.trim().isEmpty) {
                               return 'Nomor telepon wajib diisi';
                             }
-                            if (value.trim().length < 10) {
+
+                            final cleaned = value.replaceAll(
+                              RegExp(r'[^0-9]'),
+                              '',
+                            );
+
+                            if (cleaned.length < 10) {
                               return 'Nomor telepon tidak valid';
                             }
+
                             return null;
                           },
                         ),

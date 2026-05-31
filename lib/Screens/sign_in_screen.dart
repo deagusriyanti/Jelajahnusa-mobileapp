@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jelajah_nusa/Screens/main_screen.dart';
 import 'package:jelajah_nusa/Screens/sign_up_screen.dart';
+import 'package:jelajah_nusa/Screens/phone_auth_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -403,9 +404,10 @@ class _SignInScreenState extends State<SignInScreen> {
                         _authButton(
                           onTap: _signInWithGoogle,
                           icon: Image.asset(
-                            'assets/google_icon.png',
-                            width: 22,
-                            height: 22,
+                            'assets/google.png',
+                            width: 24,
+                            height: 24,
+                            fit: BoxFit.contain,
                           ),
                           text: 'Continue with Google',
                         ),
@@ -414,13 +416,16 @@ class _SignInScreenState extends State<SignInScreen> {
 
                         _authButton(
                           onTap: () {
-                            _showMessage(
-                              'Fitur login telepon akan segera tersedia',
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PhoneAuthScreen(),
+                              ),
                             );
                           },
                           icon: const Icon(
                             Icons.phone_android,
-                            size: 22,
+                            size: 24,
                             color: Color(0xFF14380B),
                           ),
                           text: 'Continue with Phone',
