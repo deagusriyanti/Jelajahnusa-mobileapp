@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:jelajah_nusa/screens/pick_location_screen.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -31,6 +34,129 @@ class _AddPostScreenState extends State<AddPostScreen> {
     currentDate = "${now.day}/${now.month}/${now.year}";
   }
 
+  String getProvinceCategory(String province) {
+  switch (province.toLowerCase()) {
+    case 'aceh':
+      return 'Aceh';
+
+    case 'sumatera utara':
+      return 'Sumatera Utara';
+
+    case 'sumatera barat':
+      return 'Sumatera Barat';
+
+    case 'riau':
+      return 'Riau';
+
+    case 'kepulauan riau':
+      return 'Kepulauan Riau';
+
+    case 'jambi':
+      return 'Jambi';
+
+    case 'sumatera selatan':
+      return 'Sumatera Selatan';
+
+    case 'bengkulu':
+      return 'Bengkulu';
+
+    case 'bangka belitung':
+    case 'kepulauan bangka belitung':
+      return 'Bangka Belitung';
+
+    case 'lampung':
+      return 'Lampung';
+
+    case 'dki jakarta':
+    case 'jakarta':
+      return 'DKI Jakarta';
+
+    case 'banten':
+      return 'Banten';
+
+    case 'jawa barat':
+      return 'Jawa Barat';
+
+    case 'jawa tengah':
+      return 'Jawa Tengah';
+
+    case 'daerah istimewa yogyakarta':
+    case 'yogyakarta':
+      return 'Yogyakarta';
+
+    case 'jawa timur':
+      return 'Jawa Timur';
+
+    case 'kalimantan barat':
+      return 'Kalimantan Barat';
+
+    case 'kalimantan tengah':
+      return 'Kalimantan Tengah';
+
+    case 'kalimantan selatan':
+      return 'Kalimantan Selatan';
+
+    case 'kalimantan timur':
+      return 'Kalimantan Timur';
+
+    case 'kalimantan utara':
+      return 'Kalimantan Utara';
+
+    case 'sulawesi utara':
+      return 'Sulawesi Utara';
+
+    case 'gorontalo':
+      return 'Gorontalo';
+
+    case 'sulawesi tengah':
+      return 'Sulawesi Tengah';
+
+    case 'sulawesi barat':
+      return 'Sulawesi Barat';
+
+    case 'sulawesi selatan':
+      return 'Sulawesi Selatan';
+
+    case 'sulawesi tenggara':
+      return 'Sulawesi Tenggara';
+
+    case 'bali':
+      return 'Bali';
+
+    case 'nusa tenggara barat':
+      return 'Nusa Tenggara Barat';
+
+    case 'nusa tenggara timur':
+      return 'Nusa Tenggara Timur';
+
+    case 'maluku':
+      return 'Maluku';
+
+    case 'maluku utara':
+      return 'Maluku Utara';
+
+    case 'papua':
+      return 'Papua';
+
+    case 'papua selatan':
+      return 'Papua Selatan';
+
+    case 'papua tengah':
+      return 'Papua Tengah';
+
+    case 'papua pegunungan':
+      return 'Papua Pegunungan';
+
+    case 'papua barat':
+      return 'Papua Barat';
+
+    case 'papua barat daya':
+      return 'Papua Barat Daya';
+
+    default:
+      return province;
+  }
+}
   Future<void> _pickImage(ImageSource source) async {
     try {
       final pickedFile = await _picker.pickImage(source: source);
@@ -104,8 +230,26 @@ class _AddPostScreenState extends State<AddPostScreen> {
       );
       return;
     }
+
+    if (_latitude == null || _longitude == null) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'Silakan pilih lokasi terlebih dahulu',
+      ),
+    ),
+  );
+  return;
+}
     setState(() => _isUploading = true);
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final userDoc = await FirebaseFirestore.instance
+    .collection('users')
+    .doc(uid)
+    .get();
+
+final username =
+    userDoc.data()?['username'] ?? 'Unknown User';
     if (uid == null) {
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(
@@ -113,17 +257,36 @@ class _AddPostScreenState extends State<AddPostScreen> {
       ).showSnackBar(const SnackBar(content: Text('User not found.')));
       return;
     }
-    try {
-      await _getLocation();
-      await FirebaseFirestore.instance.collection('posts').add({
+   try {
+  String category = "Lainnya";
+
+  if (_latitude != null && _longitude != null) {
+    final placemarks =
+        await placemarkFromCoordinates(
+      _latitude!,
+      _longitude!,
+    );
+
+    if (placemarks.isNotEmpty) {
+      category = getProvinceCategory(
+        placemarks.first.administrativeArea ?? '',
+      );
+    }
+  }
+
+  await FirebaseFirestore.instance
+      .collection('posts')
+      .add({
         'title': _titleController.text,
         'description': _descriptionController.text,
+        'fullName': username,
+        'category': category,
         'date': currentDate,
         'image': _base64Image,
         'latitude': _latitude,
         'longitude': _longitude,
         'likes': 0,
-        'likedby': [],
+        'likedBy': [],
         'createdAt': DateTime.now().toIso8601String(),
         'userId': uid,
       });
@@ -238,7 +401,22 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: _getLocation,
+                    onTap: () async {
+                          final LatLng? pickedLocation =
+                              await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PickLocationScreen(),
+                            ),
+                          );
+
+                          if (pickedLocation != null) {
+                            setState(() {
+                              _latitude = pickedLocation.latitude;
+                              _longitude = pickedLocation.longitude;
+                            });
+                          }
+                        },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 25,

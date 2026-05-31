@@ -20,6 +20,7 @@ dependencies:
   http: ^1.6.0
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
+  geocoding: ^3.0.0
 
   flutter:
     sdk: flutter
@@ -49,5 +50,4 @@ flutter:
     - assets/google_icon.png
     - assets/bali.jpeg
     - assets/alam.jpeg
-    - assets/profile.jpeg
     
