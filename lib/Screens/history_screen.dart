@@ -103,23 +103,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
                   ),
-
-                  /// FILTER
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 8),
-                      ],
-                    ),
-
-                    child: IconButton(
-                      onPressed: () {},
-
-                      icon: const Icon(Icons.tune, color: Color(0xFF005B7F)),
-                    ),
-                  ),
                 ],
               ),
             ),

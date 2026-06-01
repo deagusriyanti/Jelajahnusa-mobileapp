@@ -48,10 +48,7 @@ class _MainScreenState extends State<MainScreen> {
             label: "Favorite",
           ),
 
-          BottomNavigationBarItem(
-            icon: Icon(Icons.usb_rounded),
-            label: "Profile",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );
