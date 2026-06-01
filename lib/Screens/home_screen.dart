@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jelajah_nusa/screens/add_post_screen.dart';
 import 'package:jelajah_nusa/screens/detail_screen.dart';
 import 'package:jelajah_nusa/screens/sign_in_screen.dart';
@@ -195,6 +196,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 as Map<String, dynamic>;
                         final fullName =
                            data['fullName'] ?? 'Unknown User';
+                        final title =
+                            data['title'] ?? '';
                         /// FIRESTORE DOC ID
                         final String postId =
                             posts[index].id;
@@ -204,11 +207,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         final description =
                             data['description'] ?? '';
-
-                        final createdAt =
-                            DateTime.parse(
-                          data['createdAt'],
-                        );
+                        
+                        final DateTime createdAt =
+                           (data['createdAt'] as Timestamp).toDate();
 
                         final latitude =
                             data['latitude'] ?? 0.0;
@@ -395,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          description,
+                                          title,
 
                                           maxLines: 3,
                                           overflow:
