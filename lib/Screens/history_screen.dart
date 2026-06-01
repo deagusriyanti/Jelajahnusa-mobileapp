@@ -31,21 +31,42 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Edit Postingan"),
+          backgroundColor: Theme.of(context).cardColor,
+
+          title: Text(
+            "Edit Postingan",
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
+
           content: TextField(
             controller: controller,
             maxLines: 3,
-            decoration: const InputDecoration(hintText: "Edit deskripsi"),
+
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+
+            decoration: InputDecoration(
+              hintText: "Edit deskripsi",
+
+              hintStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
+
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text("Batal"),
+              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
             ),
 
             ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
               onPressed: () async {
                 await FirebaseFirestore.instance
                     .collection('posts')
@@ -69,7 +90,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF1F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       body: SafeArea(
         child: Column(
@@ -85,7 +106,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   /// BACK
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(color: Colors.black12, blurRadius: 8),
@@ -124,10 +145,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   final posts = snapshot.data!.docs;
 
                   if (posts.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        "No history yet",
-                        style: TextStyle(fontSize: 18),
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.history,
+                            size: 60,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.5),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          Text(
+                            "No history yet",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }
@@ -172,7 +211,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 12),
 
-                          color: const Color(0xFFEAF1F2),
+                          color: Theme.of(context).scaffoldBackgroundColor,
 
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,9 +249,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     Text(
                                       formatTime(createdAt),
 
-                                      style: const TextStyle(
-                                        color: Colors.grey,
+                                      style: TextStyle(
                                         fontSize: 14,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
                                       ),
                                     ),
 
@@ -233,12 +275,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                             context: context,
                                             builder: (context) {
                                               return AlertDialog(
-                                                title: const Text(
+                                                backgroundColor: Theme.of(
+                                                  context,
+                                                ).cardColor,
+
+                                                title: Text(
                                                   "Hapus Postingan",
+                                                  style: TextStyle(
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.onSurface,
+                                                  ),
                                                 ),
 
-                                                content: const Text(
+                                                content: Text(
                                                   "Yakin ingin menghapus postingan ini?",
+                                                  style: TextStyle(
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.onSurface,
+                                                  ),
                                                 ),
 
                                                 actions: [
@@ -246,11 +302,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     onPressed: () {
                                                       Navigator.pop(context);
                                                     },
-
-                                                    child: const Text("Batal"),
+                                                    child: const Text(
+                                                      "Batal",
+                                                      style: TextStyle(
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
                                                   ),
 
                                                   ElevatedButton(
+                                                    style:
+                                                        ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              Colors.red,
+                                                        ),
                                                     onPressed: () async {
                                                       await deletePost(postId);
 
@@ -258,7 +323,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                         Navigator.pop(context);
                                                       }
                                                     },
-
                                                     child: const Text("Hapus"),
                                                   ),
                                                 ],
@@ -331,9 +395,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     Text(
                                       "${data['likes'] ?? 0}",
 
-                                      style: const TextStyle(
-                                        color: Colors.grey,
+                                      style: TextStyle(
                                         fontSize: 18,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.7),
                                       ),
                                     ),
                                   ],

@@ -23,7 +23,8 @@ class RouteScreen extends StatefulWidget {
 }
 
 class _RouteScreenState extends State<RouteScreen> {
-  static const String apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgzNWE1MzU5ZmY4NDQ2OGE4ZmNlZWQ1MDk3NDgyZDEwIiwiaCI6Im11cm11cjY0In0=";
+  static const String apiKey =
+      "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgzNWE1MzU5ZmY4NDQ2OGE4ZmNlZWQ1MDk3NDgyZDEwIiwiaCI6Im11cm11cjY0In0=";
 
   LatLng? currentLocation;
 
@@ -62,32 +63,24 @@ class _RouteScreenState extends State<RouteScreen> {
   }
 
   Future<void> getCurrentLocation() async {
-    bool serviceEnabled =
-        await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) return;
 
-    LocationPermission permission =
-        await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
-      permission =
-          await Geolocator.requestPermission();
+      permission = await Geolocator.requestPermission();
     }
 
     if (permission == LocationPermission.denied ||
-        permission ==
-            LocationPermission.deniedForever) {
+        permission == LocationPermission.deniedForever) {
       return;
     }
 
-    final pos =
-        await Geolocator.getCurrentPosition();
+    final pos = await Geolocator.getCurrentPosition();
 
-    currentLocation = LatLng(
-      pos.latitude,
-      pos.longitude,
-    );
+    currentLocation = LatLng(pos.latitude, pos.longitude);
   }
 
   Future<void> getDrivingRoute() async {
@@ -98,49 +91,34 @@ class _RouteScreenState extends State<RouteScreen> {
         "https://api.openrouteservice.org/v2/directions/driving-car",
         queryParameters: {
           "api_key": apiKey,
-          "start":
-              "${currentLocation!.longitude},${currentLocation!.latitude}",
-          "end":
-              "${widget.longitude},${widget.latitude}",
+          "start": "${currentLocation!.longitude},${currentLocation!.latitude}",
+          "end": "${widget.longitude},${widget.latitude}",
         },
       );
 
-      final feature =
-          response.data["features"][0];
+      final feature = response.data["features"][0];
 
-      final summary =
-          feature["properties"]["summary"];
+      final summary = feature["properties"]["summary"];
 
-      distanceKm =
-          summary["distance"] / 1000;
+      distanceKm = summary["distance"] / 1000;
 
-      durationHour =
-          summary["duration"] / 3600;
+      durationHour = summary["duration"] / 3600;
 
-      carEstimate =
-          convertDuration(summary["duration"]);
+      carEstimate = convertDuration(summary["duration"]);
 
-      motorEstimate =
-          convertDuration(
-            summary["duration"] * 0.9,
-          );
+      motorEstimate = convertDuration(summary["duration"] * 0.9);
 
-      final coordinates =
-          feature["geometry"]["coordinates"];
+      final coordinates = feature["geometry"]["coordinates"];
 
-      routePoints =
-          coordinates.map<LatLng>((coord) {
-        return LatLng(
-          coord[1].toDouble(),
-          coord[0].toDouble(),
-        );
+      routePoints = coordinates.map<LatLng>((coord) {
+        return LatLng(coord[1].toDouble(), coord[0].toDouble());
       }).toList();
 
       calculateTrainAndPlane();
     } catch (e) {
-        print("ERROR ROUTE:");
-        print(e);
-      }
+      print("ERROR ROUTE:");
+      print(e);
+    }
   }
 
   Future<void> getWalkingRoute() async {
@@ -151,21 +129,16 @@ class _RouteScreenState extends State<RouteScreen> {
         "https://api.openrouteservice.org/v2/directions/foot-walking",
         queryParameters: {
           "api_key": apiKey,
-          "start":
-              "${currentLocation!.longitude},${currentLocation!.latitude}",
-          "end":
-              "${widget.longitude},${widget.latitude}",
+          "start": "${currentLocation!.longitude},${currentLocation!.latitude}",
+          "end": "${widget.longitude},${widget.latitude}",
         },
       );
 
-      final feature =
-          response.data["features"][0];
+      final feature = response.data["features"][0];
 
-      walkEstimate =
-          convertDuration(
-            feature["properties"]["summary"]
-                ["duration"],
-          );
+      walkEstimate = convertDuration(
+        feature["properties"]["summary"]["duration"],
+      );
     } catch (e) {
       walkEstimate = "Tidak tersedia";
     }
@@ -178,30 +151,21 @@ class _RouteScreenState extends State<RouteScreen> {
       return;
     }
 
-    final trainHours =
-        distanceKm / 80;
+    final trainHours = distanceKm / 80;
 
-    final planeHours =
-        distanceKm / 700;
+    final planeHours = distanceKm / 700;
 
-    trainEstimate =
-        convertDuration(trainHours * 3600);
+    trainEstimate = convertDuration(trainHours * 3600);
 
-    planeEstimate =
-        convertDuration(planeHours * 3600);
+    planeEstimate = convertDuration(planeHours * 3600);
   }
 
-  String convertDuration(
-    double seconds,
-  ) {
-    final duration =
-        Duration(seconds: seconds.round());
+  String convertDuration(double seconds) {
+    final duration = Duration(seconds: seconds.round());
 
     final days = duration.inDays;
-    final hours =
-        duration.inHours.remainder(24);
-    final minutes =
-        duration.inMinutes.remainder(60);
+    final hours = duration.inHours.remainder(24);
+    final minutes = duration.inMinutes.remainder(60);
 
     if (days > 0) {
       return "$days hari $hours jam";
@@ -210,19 +174,13 @@ class _RouteScreenState extends State<RouteScreen> {
     return "$hours jam $minutes menit";
   }
 
-  Widget transportTile(
-    IconData icon,
-    String title,
-    String value,
-  ) {
+  Widget transportTile(IconData icon, String title, String value) {
     return Container(
-      margin:
-          const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
         children: [
@@ -231,17 +189,13 @@ class _RouteScreenState extends State<RouteScreen> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                fontWeight:
-                    FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           Text(
             value,
             style: const TextStyle(
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
               color: Colors.teal,
             ),
           ),
@@ -252,26 +206,18 @@ class _RouteScreenState extends State<RouteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final destination = LatLng(
-      widget.latitude,
-      widget.longitude,
-    );
+    final destination = LatLng(widget.latitude, widget.longitude);
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFEAF8FA),
+      backgroundColor: const Color(0xFFEAF8FA),
 
       body: loading
-          ? const Center(
-              child:
-                  CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
                 FlutterMap(
                   options: MapOptions(
-                    initialCenter:
-                        destination,
+                    initialCenter: destination,
                     initialZoom: 7,
                   ),
 
@@ -279,52 +225,41 @@ class _RouteScreenState extends State<RouteScreen> {
                     TileLayer(
                       urlTemplate:
                           "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      userAgentPackageName:
-                          "com.example.jelajah_nusa",
+                      userAgentPackageName: "com.example.jelajah_nusa",
                     ),
 
-                    if (routePoints
-                        .isNotEmpty)
+                    if (routePoints.isNotEmpty)
                       PolylineLayer(
                         polylines: [
                           Polyline(
-                            points:
-                                routePoints,
+                            points: routePoints,
                             strokeWidth: 5,
-                            color:
-                                Colors.blue,
+                            color: Colors.blue,
                           ),
                         ],
                       ),
 
                     MarkerLayer(
                       markers: [
-                        if (currentLocation !=
-                            null)
+                        if (currentLocation != null)
                           Marker(
-                            point:
-                                currentLocation!,
+                            point: currentLocation!,
                             width: 50,
                             height: 50,
                             child: const Icon(
-                              Icons
-                                  .my_location,
-                              color:
-                                  Colors.blue,
+                              Icons.my_location,
+                              color: Colors.blue,
                               size: 30,
                             ),
                           ),
 
                         Marker(
-                          point:
-                              destination,
+                          point: destination,
                           width: 60,
                           height: 60,
                           child: const Icon(
-                            Icons
-                                .location_on,
-                            color:
-                                Colors.red,
+                            Icons.location_on,
+                            color: Colors.red,
                             size: 50,
                           ),
                         ),
@@ -335,117 +270,70 @@ class _RouteScreenState extends State<RouteScreen> {
 
                 SafeArea(
                   child: Padding(
-                    padding:
-                        const EdgeInsets
-                            .all(20),
+                    padding: const EdgeInsets.all(20),
                     child: CircleAvatar(
-                      backgroundColor:
-                          Colors.white,
+                      backgroundColor: Colors.white,
                       child: IconButton(
                         onPressed: () {
-                          Navigator.pop(
-                            context,
-                          );
+                          Navigator.pop(context);
                         },
-                        icon: const Icon(
-                          Icons
-                              .arrow_back,
-                        ),
+                        icon: const Icon(Icons.arrow_back),
                       ),
                     ),
                   ),
                 ),
 
                 Align(
-                  alignment:
-                      Alignment
-                          .bottomCenter,
+                  alignment: Alignment.bottomCenter,
                   child: Container(
-                    margin:
-                        const EdgeInsets
-                            .all(20),
-                    padding:
-                        const EdgeInsets
-                            .all(20),
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          Colors.white,
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  30),
+                    margin: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
                       boxShadow: const [
-                        BoxShadow(
-                          color: Colors
-                              .black12,
-                          blurRadius:
-                              10,
-                        ),
+                        BoxShadow(color: Colors.black12, blurRadius: 10),
                       ],
                     ),
-                    child:
-                        SingleChildScrollView(
+                    child: SingleChildScrollView(
                       child: Column(
-                        mainAxisSize:
-                            MainAxisSize
-                                .min,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            widget
-                                .locationName,
-                            style:
-                                const TextStyle(
-                              fontSize:
-                                  18,
-                              fontWeight:
-                                  FontWeight
-                                      .bold,
+                            widget.locationName,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
 
-                          const SizedBox(
-                              height: 10),
+                          const SizedBox(height: 10),
 
-                          Text(
-                            "Jarak ${distanceKm.toStringAsFixed(1)} km",
-                          ),
+                          Text("Jarak ${distanceKm.toStringAsFixed(1)} km"),
 
-                          const SizedBox(
-                              height: 20),
+                          const SizedBox(height: 20),
 
                           transportTile(
-                            Icons
-                                .directions_car,
+                            Icons.directions_car,
                             "Mobil",
                             carEstimate,
                           ),
 
                           transportTile(
-                            Icons
-                                .motorcycle,
+                            Icons.motorcycle,
                             "Motor",
                             motorEstimate,
                           ),
 
                           transportTile(
-                            Icons
-                                .directions_walk,
+                            Icons.directions_walk,
                             "Pejalan Kaki",
                             walkEstimate,
                           ),
 
-                          transportTile(
-                            Icons.train,
-                            "Kereta",
-                            trainEstimate,
-                          ),
+                          transportTile(Icons.train, "Kereta", trainEstimate),
 
-                          transportTile(
-                            Icons.flight,
-                            "Pesawat",
-                            planeEstimate,
-                          ),
+                          transportTile(Icons.flight, "Pesawat", planeEstimate),
                         ],
                       ),
                     ),

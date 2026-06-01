@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF1F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       body: SafeArea(
         child: Column(
@@ -76,11 +76,16 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
 
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xFFBFEAEA), Color(0xFFEAF1F2)],
+                  colors: Theme.of(context).brightness == Brightness.dark
+                      ? [
+                          const Color(0xFF1E2A2F),
+                          Theme.of(context).scaffoldBackgroundColor,
+                        ]
+                      : [const Color(0xFFBFEAEA), const Color(0xFFEAF1F2)],
                 ),
               ),
 
@@ -151,7 +156,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return const Center(child: Text("Belum ada postingan"));
+                      return Center(
+                        child: Text(
+                          "Belum ada postingan",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
                     }
 
                     final posts = snapshot.data!.docs;
@@ -210,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 14),
 
-                            color: const Color(0xFFEAF1F2),
+                            color: Theme.of(context).scaffoldBackgroundColor,
 
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,9 +278,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Text(
                                         formatTime(createdAt),
 
-                                        style: const TextStyle(
-                                          color: Colors.grey,
+                                        style: TextStyle(
                                           fontSize: 13,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.6),
                                         ),
                                       ),
 
@@ -301,18 +317,43 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       );
 
                                                   return AlertDialog(
-                                                    title: const Text(
+                                                    backgroundColor: Theme.of(
+                                                      context,
+                                                    ).cardColor,
+
+                                                    title: Text(
                                                       "Edit Postingan",
+                                                      style: TextStyle(
+                                                        color: Theme.of(
+                                                          context,
+                                                        ).colorScheme.onSurface,
+                                                      ),
                                                     ),
                                                     content: TextField(
                                                       controller:
                                                           descController,
                                                       maxLines: 3,
-                                                      decoration:
-                                                          const InputDecoration(
-                                                            hintText:
-                                                                "Edit deskripsi",
-                                                          ),
+
+                                                      style: TextStyle(
+                                                        color: Theme.of(
+                                                          context,
+                                                        ).colorScheme.onSurface,
+                                                      ),
+
+                                                      decoration: InputDecoration(
+                                                        hintText:
+                                                            "Edit deskripsi",
+
+                                                        hintStyle: TextStyle(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onSurface
+                                                                  .withOpacity(
+                                                                    0.5,
+                                                                  ),
+                                                        ),
+                                                      ),
                                                     ),
                                                     actions: [
                                                       TextButton(
@@ -323,6 +364,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         },
                                                         child: const Text(
                                                           "Batal",
+                                                          style: TextStyle(
+                                                            color: Colors.grey,
+                                                          ),
                                                         ),
                                                       ),
 
@@ -444,9 +488,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                           Text(
                                             likes.toString(),
 
-                                            style: const TextStyle(
-                                              color: Colors.grey,
+                                            style: TextStyle(
                                               fontSize: 16,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.7),
                                             ),
                                           ),
                                         ],

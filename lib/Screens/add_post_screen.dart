@@ -346,7 +346,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
@@ -362,7 +362,17 @@ class _AddPostScreenState extends State<AddPostScreen> {
         inputFormatters: maxLength != null
             ? [LengthLimitingTextInputFormatter(maxLength)]
             : null,
-        decoration: InputDecoration(border: InputBorder.none, hintText: hint),
+
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: hint,
+
+          hintStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          ),
+        ),
       ),
     );
   }
@@ -370,7 +380,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF1F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -383,7 +393,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -420,7 +430,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
@@ -430,11 +440,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Text(
                             "Add",
-                            style: TextStyle(fontSize: 22, color: Colors.black),
+                            style: TextStyle(
+                              fontSize: 22,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                           SizedBox(width: 12),
                           Icon(Icons.location_on, color: Colors.red, size: 35),
@@ -453,7 +466,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   height: 280,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
@@ -466,9 +479,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Add Photo',
-                        style: TextStyle(fontSize: 20, color: Colors.black54),
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                        ),
                       ),
                       Expanded(
                         child: Center(
@@ -486,13 +504,15 @@ class _AddPostScreenState extends State<AddPostScreen> {
                                   width: 90,
                                   height: 90,
                                   decoration: BoxDecoration(
-                                    color: Colors.grey[200],
+                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.add,
                                     size: 45,
-                                    color: Colors.black54,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.6),
                                   ),
                                 ),
                         ),
@@ -527,7 +547,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   vertical: 22,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
@@ -543,9 +563,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
                     const SizedBox(width: 12),
                     Text(
                       currentDate,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],

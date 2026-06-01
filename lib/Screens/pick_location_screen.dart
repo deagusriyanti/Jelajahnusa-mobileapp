@@ -126,7 +126,7 @@ class _PickLocationScreenState extends State<PickLocationScreen> {
                   /// BACK BUTTON
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(color: Colors.black12, blurRadius: 8),
@@ -136,7 +136,10 @@ class _PickLocationScreenState extends State<PickLocationScreen> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      icon: const Icon(Icons.arrow_back),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -146,7 +149,7 @@ class _PickLocationScreenState extends State<PickLocationScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(color: Colors.black12, blurRadius: 8),
@@ -158,10 +161,22 @@ class _PickLocationScreenState extends State<PickLocationScreen> {
                             child: TextField(
                               controller: _searchController,
                               textInputAction: TextInputAction.search,
-                              decoration: const InputDecoration(
+
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+
+                              decoration: InputDecoration(
                                 border: InputBorder.none,
                                 hintText: "Search Indonesia location...",
+
+                                hintStyle: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.5),
+                                ),
                               ),
+
                               onSubmitted: (_) => searchLocation(),
                             ),
                           ),

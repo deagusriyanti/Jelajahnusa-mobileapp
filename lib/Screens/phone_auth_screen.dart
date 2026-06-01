@@ -147,7 +147,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  InputDecoration _inputDecoration(String label) {
+  InputDecoration _inputDecoration(BuildContext context, String label) {
     return InputDecoration(
       labelText: label,
       floatingLabelBehavior: FloatingLabelBehavior.always,
@@ -156,11 +156,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         fontSize: 11,
         fontWeight: FontWeight.w800,
       ),
+      floatingLabelStyle: const TextStyle(
+        color: Color(0xFF007C89),
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+      ),
       focusedBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: Color(0xFF007C89), width: 1.4),
       ),
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey),
+      ),
+      hintStyle: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
       ),
     );
   }
@@ -175,7 +183,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF5F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
@@ -209,14 +217,22 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: _inputDecoration('No Telepon'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  decoration: _inputDecoration(context, 'No Telepon'),
                 ),
 
                 const SizedBox(height: 12),
 
                 Text(
                   'Masukkan nomor yang sudah didaftarkan saat Sign Up. Contoh: 0857xxxxxxx',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
+                  ),
                 ),
 
                 const SizedBox(height: 36),
@@ -226,7 +242,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 TextFormField(
                   controller: _otpController,
                   keyboardType: TextInputType.number,
-                  decoration: _inputDecoration('Kode OTP'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  decoration: _inputDecoration(context, 'Kode OTP'),
                 ),
 
                 const SizedBox(height: 36),

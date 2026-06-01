@@ -14,7 +14,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
-  final List<Widget> pages = [
+  final List<Widget> pages = const [
     HomeScreen(),
     SearchScreen(),
     FavoriteScreen(),
@@ -24,13 +24,19 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       body: pages[currentIndex],
 
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Theme.of(context).cardColor,
         currentIndex: currentIndex,
         selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: Theme.of(
+          context,
+        ).colorScheme.onSurface.withOpacity(0.55),
         type: BottomNavigationBarType.fixed,
+        elevation: 8,
 
         onTap: (index) {
           setState(() {
@@ -40,14 +46,11 @@ class _MainScreenState extends State<MainScreen> {
 
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-
           BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: "Favorite",
           ),
-
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),

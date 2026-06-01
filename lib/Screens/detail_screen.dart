@@ -95,27 +95,28 @@ class _DetailScreenState extends State<DetailScreen> {
 
   /// ADD COMMENT
   Future<void> addComment() async {
-  if (_commentController.text.trim().isEmpty) {
-    return;
+    if (_commentController.text.trim().isEmpty) {
+      return;
+    }
+
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    await FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.postId)
+        .collection('comments')
+        .add({
+          'userId': uid,
+          'name': widget.fullName,
+          'comment': _commentController.text.trim(),
+          'createdAt': Timestamp.now(),
+          'likes': 0,
+          'likedBy': [],
+        });
+
+    _commentController.clear();
   }
 
-  final uid = FirebaseAuth.instance.currentUser!.uid;
-
-  await FirebaseFirestore.instance
-      .collection('posts')
-      .doc(widget.postId)
-      .collection('comments')
-      .add({
-    'userId': uid,
-    'name': widget.fullName,
-    'comment': _commentController.text.trim(),
-    'createdAt': Timestamp.now(),
-    'likes': 0,
-    'likedBy': [],
-  });
-
-  _commentController.clear();
-}
   /// ADD REPLY
   Future<void> addReply(String commentId, String reply) async {
     if (reply.trim().isEmpty) return;
@@ -151,44 +152,38 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   Future<void> deleteComment(String commentId) async {
-  final commentRef = FirebaseFirestore.instance
-      .collection('posts')
-      .doc(widget.postId)
-      .collection('comments')
-      .doc(commentId);
+    final commentRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.postId)
+        .collection('comments')
+        .doc(commentId);
 
-  final replies =
-      await commentRef.collection('replies').get();
+    final replies = await commentRef.collection('replies').get();
 
-  for (var doc in replies.docs) {
-    await doc.reference.delete();
+    for (var doc in replies.docs) {
+      await doc.reference.delete();
+    }
+
+    await commentRef.delete();
   }
 
-  await commentRef.delete();
-}
+  Future<void> deleteReply(String commentId, String replyId) async {
+    await FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.postId)
+        .collection('comments')
+        .doc(commentId)
+        .collection('replies')
+        .doc(replyId)
+        .delete();
 
-Future<void> deleteReply(
-  String commentId,
-  String replyId,
-) async {
-  await FirebaseFirestore.instance
-      .collection('posts')
-      .doc(widget.postId)
-      .collection('comments')
-      .doc(commentId)
-      .collection('replies')
-      .doc(replyId)
-      .delete();
-
-  await FirebaseFirestore.instance
-      .collection('posts')
-      .doc(widget.postId)
-      .collection('comments')
-      .doc(commentId)
-      .update({
-        'replyCount': FieldValue.increment(-1),
-      });
-}
+    await FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.postId)
+        .collection('comments')
+        .doc(commentId)
+        .update({'replyCount': FieldValue.increment(-1)});
+  }
 
   Future<void> toggleLike(String postId, List likedBy) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
@@ -218,7 +213,7 @@ Future<void> deleteReply(
       length: 2,
 
       child: Scaffold(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
         body: Stack(
           children: [
@@ -256,14 +251,19 @@ Future<void> deleteReply(
                 padding: const EdgeInsets.all(20),
 
                 child: CircleAvatar(
-                  backgroundColor: Colors.white70,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).cardColor.withOpacity(0.85),
 
                   child: IconButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
 
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ),
@@ -279,8 +279,8 @@ Future<void> deleteReply(
                 return Container(
                   padding: const EdgeInsets.all(24),
 
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
 
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(35),
@@ -318,7 +318,7 @@ Future<void> deleteReply(
                                   const SizedBox(height: 10),
 
                                   /// LOCATION
-                                 GestureDetector(
+                                  GestureDetector(
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -346,7 +346,10 @@ Future<void> deleteReply(
                                           child: Text(
                                             locationName,
                                             style: TextStyle(
-                                              color: Colors.grey[700],
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.7),
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -423,7 +426,9 @@ Future<void> deleteReply(
                                 return Column(
                                   children: [
                                     CircleAvatar(
-                                      backgroundColor: Colors.grey[100],
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).scaffoldBackgroundColor,
 
                                       child: IconButton(
                                         onPressed: () {
@@ -487,9 +492,12 @@ Future<void> deleteReply(
                                     Text(
                                       widget.description,
 
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         height: 1.8,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       ),
                                     ),
 
@@ -510,7 +518,7 @@ Future<void> deleteReply(
                                   ],
                                 ),
                               ),
-                              
+
                               /// COMMENT TAB
                               Column(
                                 children: [
@@ -521,37 +529,44 @@ Future<void> deleteReply(
                                       horizontal: 16,
                                       vertical: 4,
                                     ),
-
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
-
+                                      color: Theme.of(context).cardColor,
                                       borderRadius: BorderRadius.circular(18),
-
-                                      boxShadow: [
+                                      boxShadow: const [
                                         BoxShadow(
                                           color: Colors.black12,
                                           blurRadius: 8,
                                         ),
                                       ],
                                     ),
-
                                     child: Row(
                                       children: [
                                         Expanded(
                                           child: TextField(
                                             controller: _commentController,
 
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurface,
+                                            ),
 
+                                            decoration: InputDecoration(
+                                              border: InputBorder.none,
                                               hintText: "Tulis komentar...",
+
+                                              hintStyle: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withOpacity(0.5),
+                                              ),
                                             ),
                                           ),
                                         ),
 
                                         IconButton(
                                           onPressed: addComment,
-
                                           icon: const Icon(
                                             Icons.send,
                                             color: Colors.teal,
@@ -642,7 +657,9 @@ Future<void> deleteReply(
                                               padding: const EdgeInsets.all(16),
 
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF1F7F8),
+                                                color: Theme.of(
+                                                  context,
+                                                ).scaffoldBackgroundColor,
 
                                                 borderRadius:
                                                     BorderRadius.circular(18),
@@ -654,92 +671,129 @@ Future<void> deleteReply(
 
                                                 children: [
                                                   /// USER
-                                                 Row(
-                                                  children: [
-                                                    CircleAvatar(
-                                                      radius: 14,
-                                                      backgroundColor: Colors.grey[300],
-                                                      child: const Icon(
-                                                        Icons.person,
-                                                        size: 16,
-                                                      ),
-                                                    ),
-
-                                                    const SizedBox(width: 10),
-
-                                                    Expanded(
-                                                      child: Text(
-                                                        data['name'] ?? "User",
-                                                        style: const TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Colors.teal,
+                                                  Row(
+                                                    children: [
+                                                      CircleAvatar(
+                                                        radius: 14,
+                                                        backgroundColor:
+                                                            Colors.grey[300],
+                                                        child: const Icon(
+                                                          Icons.person,
+                                                          size: 16,
                                                         ),
                                                       ),
-                                                    ),
 
-                                                    if (data['userId'] ==
-                                                        FirebaseAuth.instance.currentUser!.uid)
+                                                      const SizedBox(width: 10),
 
-                                                      PopupMenuButton<String>(
-                                                        icon: const Icon(
-                                                          Icons.more_vert,
-                                                          size: 18,
+                                                      Expanded(
+                                                        child: Text(
+                                                          data['name'] ??
+                                                              "User",
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    Colors.teal,
+                                                              ),
                                                         ),
+                                                      ),
 
-                                                        onSelected: (value) async {
-                                                          if (value == 'delete') {
-                                                            final confirm = await showDialog<bool>(
-                                                              context: context,
-                                                              builder: (_) => AlertDialog(
-                                                                title: const Text("Hapus Komentar"),
-                                                                content: const Text(
-                                                                  "Yakin ingin menghapus komentar ini?",
+                                                      if (data['userId'] ==
+                                                          FirebaseAuth
+                                                              .instance
+                                                              .currentUser!
+                                                              .uid)
+                                                        PopupMenuButton<String>(
+                                                          icon: const Icon(
+                                                            Icons.more_vert,
+                                                            size: 18,
+                                                          ),
+
+                                                          onSelected: (value) async {
+                                                            if (value ==
+                                                                'delete') {
+                                                              final confirm = await showDialog<bool>(
+                                                                context:
+                                                                    context,
+                                                                builder: (_) => AlertDialog(
+                                                                  title: const Text(
+                                                                    "Hapus Komentar",
+                                                                  ),
+                                                                  content:
+                                                                      const Text(
+                                                                        "Yakin ingin menghapus komentar ini?",
+                                                                      ),
+                                                                  actions: [
+                                                                    TextButton(
+                                                                      onPressed: () =>
+                                                                          Navigator.pop(
+                                                                            context,
+                                                                            false,
+                                                                          ),
+                                                                      child: const Text(
+                                                                        "Batal",
+                                                                      ),
+                                                                    ),
+
+                                                                    ElevatedButton(
+                                                                      onPressed: () =>
+                                                                          Navigator.pop(
+                                                                            context,
+                                                                            true,
+                                                                          ),
+                                                                      child: const Text(
+                                                                        "Hapus",
+                                                                      ),
+                                                                    ),
+                                                                  ],
                                                                 ),
-                                                                actions: [
-                                                                  TextButton(
-                                                                    onPressed: () =>
-                                                                        Navigator.pop(context, false),
-                                                                    child: const Text("Batal"),
-                                                                  ),
+                                                              );
 
-                                                                  ElevatedButton(
-                                                                    onPressed: () =>
-                                                                        Navigator.pop(context, true),
-                                                                    child: const Text("Hapus"),
+                                                              if (confirm ==
+                                                                  true) {
+                                                                await deleteComment(
+                                                                  comment.id,
+                                                                );
+                                                              }
+                                                            }
+                                                          },
+
+                                                          itemBuilder: (context) => [
+                                                            const PopupMenuItem(
+                                                              value: 'delete',
+                                                              child: Row(
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons
+                                                                        .delete,
+                                                                    color: Colors
+                                                                        .red,
                                                                   ),
+                                                                  SizedBox(
+                                                                    width: 10,
+                                                                  ),
+                                                                  Text("Hapus"),
                                                                 ],
                                                               ),
-                                                            );
-
-                                                            if (confirm == true) {
-                                                              await deleteComment(comment.id);
-                                                            }
-                                                          }
-                                                        },
-
-                                                        itemBuilder: (context) => [
-                                                          const PopupMenuItem(
-                                                            value: 'delete',
-                                                            child: Row(
-                                                              children: [
-                                                                Icon(
-                                                                  Icons.delete,
-                                                                  color: Colors.red,
-                                                                ),
-                                                                SizedBox(width: 10),
-                                                                Text("Hapus"),
-                                                              ],
                                                             ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                  ],
-                                                ),
+                                                          ],
+                                                        ),
+                                                    ],
+                                                  ),
 
                                                   const SizedBox(height: 10),
 
                                                   /// COMMENT
-                                                  Text(data['comment'] ?? ''),
+                                                  Text(
+                                                    data['comment'] ?? '',
+                                                    style: TextStyle(
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.onSurface,
+                                                    ),
+                                                  ),
                                                   const SizedBox(height: 8),
 
                                                   Row(
@@ -832,135 +886,231 @@ Future<void> deleteReply(
                                                       /// REPLY
                                                       InkWell(
                                                         onTap: () {
-                                                       showModalBottomSheet(
-                                                        context: context,
-                                                        isScrollControlled: true,
-                                                        backgroundColor: Colors.transparent,
-                                                        builder: (context) {
-                                                          final replyController = TextEditingController();
+                                                          showModalBottomSheet(
+                                                            context: context,
+                                                            isScrollControlled:
+                                                                true,
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            builder: (context) {
+                                                              final replyController =
+                                                                  TextEditingController();
 
-                                                          return Container(
-                                                            height: MediaQuery.of(context).size.height * 0.75,
-                                                            padding: EdgeInsets.only(
-                                                              left: 20,
-                                                              right: 20,
-                                                              top: 20,
-                                                              bottom:
-                                                                  MediaQuery.of(context).viewInsets.bottom + 20,
-                                                            ),
-                                                            decoration: const BoxDecoration(
-                                                              color: Colors.white,
-                                                              borderRadius: BorderRadius.vertical(
-                                                                top: Radius.circular(30),
-                                                              ),
-                                                            ),
-                                                            child: Column(
-                                                              children: [
-                                                                Container(
-                                                                  width: 60,
-                                                                  height: 6,
-                                                                  decoration: BoxDecoration(
-                                                                    color: Colors.grey.shade300,
-                                                                    borderRadius: BorderRadius.circular(30),
-                                                                  ),
+                                                              return Container(
+                                                                height:
+                                                                    MediaQuery.of(
+                                                                      context,
+                                                                    ).size.height *
+                                                                    0.75,
+                                                                padding: EdgeInsets.only(
+                                                                  left: 20,
+                                                                  right: 20,
+                                                                  top: 20,
+                                                                  bottom:
+                                                                      MediaQuery.of(
+                                                                        context,
+                                                                      ).viewInsets.bottom +
+                                                                      20,
                                                                 ),
-
-                                                                const SizedBox(height: 20),
-
-                                                                const Text(
-                                                                  "Reply Comment",
-                                                                  style: TextStyle(
-                                                                    fontSize: 22,
-                                                                    fontWeight: FontWeight.bold,
-                                                                  ),
-                                                                ),
-
-                                                                const SizedBox(height: 15),
-
-                                                                Container(
-                                                                  width: double.infinity,
-                                                                  padding: const EdgeInsets.all(14),
-                                                                  decoration: BoxDecoration(
-                                                                    color: Colors.grey.shade100,
-                                                                    borderRadius: BorderRadius.circular(15),
-                                                                  ),
-                                                                  child: Text(
-                                                                    data['comment'] ?? '',
-                                                                    maxLines: 3,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    style: TextStyle(
-                                                                      color: Colors.grey.shade700,
-                                                                    ),
-                                                                  ),
-                                                                ),
-
-                                                                const SizedBox(height: 20),
-
-                                                                Expanded(
-                                                                  child: TextField(
-                                                                    controller: replyController,
-                                                                    autofocus: true,
-                                                                    expands: true,
-                                                                    maxLines: null,
-                                                                    minLines: null,
-                                                                    textAlignVertical: TextAlignVertical.top,
-                                                                    decoration: InputDecoration(
-                                                                      hintText: "Write your reply...",
-                                                                      filled: true,
-                                                                      fillColor: Colors.grey.shade100,
-                                                                      border: OutlineInputBorder(
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(20),
-                                                                        borderSide: BorderSide.none,
+                                                                decoration: BoxDecoration(
+                                                                  color: Theme.of(
+                                                                    context,
+                                                                  ).cardColor,
+                                                                  borderRadius:
+                                                                      BorderRadius.vertical(
+                                                                        top: Radius.circular(
+                                                                          30,
+                                                                        ),
                                                                       ),
-                                                                      contentPadding:
-                                                                          const EdgeInsets.all(20),
-                                                                    ),
-                                                                  ),
                                                                 ),
+                                                                child: Column(
+                                                                  children: [
+                                                                    Container(
+                                                                      width: 60,
+                                                                      height: 6,
+                                                                      decoration: BoxDecoration(
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .shade300,
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(
+                                                                              30,
+                                                                            ),
+                                                                      ),
+                                                                    ),
 
-                                                                const SizedBox(height: 20),
+                                                                    const SizedBox(
+                                                                      height:
+                                                                          20,
+                                                                    ),
 
-                                                                SizedBox(
-                                                                  width: double.infinity,
-                                                                  height: 55,
-                                                                  child: ElevatedButton.icon(
-                                                                    icon: const Icon(Icons.send),
-                                                                    label: const Text(
-                                                                      "Send Reply",
+                                                                    const Text(
+                                                                      "Reply Comment",
                                                                       style: TextStyle(
-                                                                        fontSize: 16,
-                                                                        fontWeight: FontWeight.bold,
+                                                                        fontSize:
+                                                                            22,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
                                                                       ),
                                                                     ),
-                                                                    style: ElevatedButton.styleFrom(
-                                                                      backgroundColor: Colors.teal,
-                                                                      shape: RoundedRectangleBorder(
+
+                                                                    const SizedBox(
+                                                                      height:
+                                                                          15,
+                                                                    ),
+
+                                                                    Container(
+                                                                      width: double
+                                                                          .infinity,
+                                                                      padding:
+                                                                          const EdgeInsets.all(
+                                                                            14,
+                                                                          ),
+                                                                      decoration: BoxDecoration(
+                                                                        color: Theme.of(
+                                                                          context,
+                                                                        ).scaffoldBackgroundColor,
                                                                         borderRadius:
-                                                                            BorderRadius.circular(18),
+                                                                            BorderRadius.circular(
+                                                                              15,
+                                                                            ),
+                                                                      ),
+                                                                      child: Text(
+                                                                        data['comment'] ??
+                                                                            '',
+                                                                        maxLines:
+                                                                            3,
+                                                                        overflow:
+                                                                            TextOverflow.ellipsis,
+                                                                        style: TextStyle(
+                                                                          color: Colors
+                                                                              .grey
+                                                                              .shade700,
+                                                                        ),
                                                                       ),
                                                                     ),
-                                                                    onPressed: () async {
-                                                                      await addReply(
-                                                                        comment.id,
-                                                                        replyController.text,
-                                                                      );
 
-                                                                      if (!mounted) return;
+                                                                    const SizedBox(
+                                                                      height:
+                                                                          20,
+                                                                    ),
 
-                                                                      setState(() {
-                                                                        expandedReplies[comment.id] = true;
-                                                                      });
+                                                                    Expanded(
+                                                                      child: TextField(
+                                                                        controller:
+                                                                            replyController,
+                                                                        autofocus:
+                                                                            true,
+                                                                        expands:
+                                                                            true,
+                                                                        maxLines:
+                                                                            null,
+                                                                        minLines:
+                                                                            null,
+                                                                        textAlignVertical:
+                                                                            TextAlignVertical.top,
 
-                                                                      Navigator.pop(context);
-                                                                    },
-                                                                  ),
+                                                                        style: TextStyle(
+                                                                          color: Theme.of(
+                                                                            context,
+                                                                          ).colorScheme.onSurface,
+                                                                        ),
+
+                                                                        decoration: InputDecoration(
+                                                                          hintText:
+                                                                              "Write your reply...",
+
+                                                                          hintStyle: TextStyle(
+                                                                            color:
+                                                                                Theme.of(
+                                                                                  context,
+                                                                                ).colorScheme.onSurface.withOpacity(
+                                                                                  0.5,
+                                                                                ),
+                                                                          ),
+
+                                                                          filled:
+                                                                              true,
+
+                                                                          fillColor: Theme.of(
+                                                                            context,
+                                                                          ).scaffoldBackgroundColor,
+
+                                                                          border: OutlineInputBorder(
+                                                                            borderRadius: BorderRadius.circular(
+                                                                              20,
+                                                                            ),
+                                                                            borderSide:
+                                                                                BorderSide.none,
+                                                                          ),
+
+                                                                          contentPadding: const EdgeInsets.all(
+                                                                            20,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+
+                                                                    const SizedBox(
+                                                                      height:
+                                                                          20,
+                                                                    ),
+
+                                                                    SizedBox(
+                                                                      width: double
+                                                                          .infinity,
+                                                                      height:
+                                                                          55,
+                                                                      child: ElevatedButton.icon(
+                                                                        icon: const Icon(
+                                                                          Icons
+                                                                              .send,
+                                                                        ),
+                                                                        label: const Text(
+                                                                          "Send Reply",
+                                                                          style: TextStyle(
+                                                                            fontSize:
+                                                                                16,
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                          ),
+                                                                        ),
+                                                                        style: ElevatedButton.styleFrom(
+                                                                          backgroundColor:
+                                                                              Colors.teal,
+                                                                          shape: RoundedRectangleBorder(
+                                                                            borderRadius: BorderRadius.circular(
+                                                                              18,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                        onPressed: () async {
+                                                                          await addReply(
+                                                                            comment.id,
+                                                                            replyController.text,
+                                                                          );
+
+                                                                          if (!mounted)
+                                                                            return;
+
+                                                                          setState(
+                                                                            () {
+                                                                              expandedReplies[comment.id] = true;
+                                                                            },
+                                                                          );
+
+                                                                          Navigator.pop(
+                                                                            context,
+                                                                          );
+                                                                        },
+                                                                      ),
+                                                                    ),
+                                                                  ],
                                                                 ),
-                                                              ],
-                                                            ),
+                                                              );
+                                                            },
                                                           );
-                                                        },
-                                                      );
                                                         },
                                                         child: const Row(
                                                           children: [
@@ -1072,14 +1222,14 @@ Future<void> deleteReply(
                                                                     ),
 
                                                                 decoration: BoxDecoration(
-                                                                  color: Colors
-                                                                      .white,
+                                                                  color: Theme.of(
+                                                                    context,
+                                                                  ).cardColor,
                                                                   borderRadius:
                                                                       BorderRadius.circular(
                                                                         14,
                                                                       ),
                                                                 ),
-
                                                                 child: Column(
                                                                   crossAxisAlignment:
                                                                       CrossAxisAlignment
@@ -1090,7 +1240,8 @@ Future<void> deleteReply(
                                                                       children: [
                                                                         Expanded(
                                                                           child: Text(
-                                                                            replyData['name'] ?? 'User',
+                                                                            replyData['name'] ??
+                                                                                'User',
                                                                             style: const TextStyle(
                                                                               fontWeight: FontWeight.bold,
                                                                               color: Colors.teal,
@@ -1100,7 +1251,6 @@ Future<void> deleteReply(
 
                                                                         if (replyData['userId'] ==
                                                                             FirebaseAuth.instance.currentUser!.uid)
-
                                                                           IconButton(
                                                                             icon: const Icon(
                                                                               Icons.delete_outline,
@@ -1124,6 +1274,11 @@ Future<void> deleteReply(
                                                                     Text(
                                                                       replyData['reply'] ??
                                                                           '',
+                                                                      style: TextStyle(
+                                                                        color: Theme.of(
+                                                                          context,
+                                                                        ).colorScheme.onSurface,
+                                                                      ),
                                                                     ),
                                                                   ],
                                                                 ),

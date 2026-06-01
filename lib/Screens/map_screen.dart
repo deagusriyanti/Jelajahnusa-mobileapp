@@ -21,10 +21,7 @@ class MapScreen extends StatelessWidget {
       'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude',
     );
 
-    await launchUrl(
-      url,
-      mode: LaunchMode.externalApplication,
-    );
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override
@@ -36,16 +33,11 @@ class MapScreen extends StatelessWidget {
         children: [
           /// MAP
           FlutterMap(
-            options: MapOptions(
-              initialCenter: point,
-              initialZoom: 11,
-            ),
+            options: MapOptions(initialCenter: point, initialZoom: 11),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName:
-                    'com.example.jelajahnusa',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.jelajahnusa',
               ),
 
               MarkerLayer(
@@ -74,19 +66,16 @@ class MapScreen extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(26),
                   boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                    ),
+                    BoxShadow(color: Colors.black12, blurRadius: 10),
                   ],
                 ),
                 child: IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.arrow_back,
-                    color: Colors.blueGrey,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   onPressed: () {
                     Navigator.pop(context);
@@ -101,26 +90,23 @@ class MapScreen extends StatelessWidget {
             child: Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.only(
-                  top: 18,
-                  right: 18,
-                ),
+                padding: const EdgeInsets.only(top: 18, right: 18),
                 child: ElevatedButton(
                   onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RouteScreen(
-                            latitude: latitude,
-                            longitude: longitude,
-                            locationName: locationName,
-                          ),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RouteScreen(
+                          latitude: latitude,
+                          longitude: longitude,
+                          locationName: locationName,
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: Theme.of(context).cardColor,
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
                     elevation: 5,
                     minimumSize: const Size(95, 45),
                     shape: RoundedRectangleBorder(
@@ -129,9 +115,7 @@ class MapScreen extends StatelessWidget {
                   ),
                   child: const Text(
                     'Route',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -144,12 +128,9 @@ class MapScreen extends StatelessWidget {
             right: 20,
             bottom: 35,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 16,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: const [
                   BoxShadow(
@@ -161,19 +142,17 @@ class MapScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.location_on,
-                    color: Colors.red,
-                  ),
+                  const Icon(Icons.location_on, color: Colors.red),
 
                   const SizedBox(width: 10),
 
                   Expanded(
                     child: Text(
                       locationName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),

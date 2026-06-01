@@ -18,8 +18,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF1F2),
-
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -27,7 +26,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
 
             const Text(
               "Likes",
-
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -43,7 +41,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                     .collection('posts')
                     .where('likedBy', arrayContains: uid)
                     .snapshots(),
-
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -52,14 +49,20 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                   final posts = snapshot.data!.docs;
 
                   if (posts.isEmpty) {
-                    return const Center(child: Text("No favorite post yet"));
+                    return Center(
+                      child: Text(
+                        "No favorite post yet",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
                   }
 
                   return GridView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-
                     itemCount: posts.length,
-
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
@@ -67,7 +70,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                           mainAxisSpacing: 8,
                           childAspectRatio: 1,
                         ),
-
                     itemBuilder: (context, index) {
                       final data = posts[index].data() as Map<String, dynamic>;
 
@@ -91,21 +93,14 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                             ),
                           );
                         },
-
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(2),
-
-                              child: Image.memory(
-                                base64Decode(data['image']),
-
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
-                            ),
-                          ],
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            base64Decode(data['image']),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
                         ),
                       );
                     },
