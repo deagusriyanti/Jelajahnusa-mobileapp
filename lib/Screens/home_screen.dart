@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jelajah_nusa/screens/add_post_screen.dart';
+import 'package:jelajah_nusa/screens/edit_screen.dart';
 import 'package:jelajah_nusa/screens/detail_screen.dart';
 import 'package:jelajah_nusa/screens/sign_in_screen.dart';
 
@@ -306,99 +307,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   .delete();
                                             }
 
-                                            if (value == 'edit') {
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  final TextEditingController
-                                                  descController =
-                                                      TextEditingController(
-                                                        text: description,
-                                                      );
-
-                                                  return AlertDialog(
-                                                    backgroundColor: Theme.of(
-                                                      context,
-                                                    ).cardColor,
-
-                                                    title: Text(
-                                                      "Edit Postingan",
-                                                      style: TextStyle(
-                                                        color: Theme.of(
-                                                          context,
-                                                        ).colorScheme.onSurface,
-                                                      ),
-                                                    ),
-                                                    content: TextField(
-                                                      controller:
-                                                          descController,
-                                                      maxLines: 3,
-
-                                                      style: TextStyle(
-                                                        color: Theme.of(
-                                                          context,
-                                                        ).colorScheme.onSurface,
-                                                      ),
-
-                                                      decoration: InputDecoration(
-                                                        hintText:
-                                                            "Edit deskripsi",
-
-                                                        hintStyle: TextStyle(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onSurface
-                                                                  .withOpacity(
-                                                                    0.5,
-                                                                  ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                        },
-                                                        child: const Text(
-                                                          "Batal",
-                                                          style: TextStyle(
-                                                            color: Colors.grey,
-                                                          ),
-                                                        ),
-                                                      ),
-
-                                                      ElevatedButton(
-                                                        onPressed: () async {
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                'posts',
-                                                              )
-                                                              .doc(postId)
-                                                              .update({
-                                                                'description':
-                                                                    descController
-                                                                        .text,
-                                                              });
-
-                                                          if (context.mounted) {
-                                                            Navigator.pop(
-                                                              context,
-                                                            );
-                                                          }
-                                                        },
-                                                        child: const Text(
-                                                          "Simpan",
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            }
+                                           if (value == 'edit') {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => EditScreen(
+                                                  postId: postId,
+                                                  title: title,
+                                                  description: description,
+                                                  imageBase64: imageBase64,
+                                                  latitude: latitude,
+                                                  longitude: longitude,
+                                                  category: category,
+                                                ),
+                                              ),
+                                            );
+                                          }
                                           },
                                           itemBuilder: (context) => [
                                             const PopupMenuItem(
