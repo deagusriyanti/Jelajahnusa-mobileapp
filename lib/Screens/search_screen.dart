@@ -66,14 +66,30 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color.fromARGB(255, 194, 238, 238), Colors.white],
+            colors: Theme.of(context).brightness == Brightness.dark
+                ? [
+                    const Color(0xFF1E2A2F),
+                    Theme.of(context).scaffoldBackgroundColor,
+                  ]
+                : [
+                    const Color.fromARGB(255, 194, 238, 238),
+                    Colors.white,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -87,13 +103,16 @@ class _SearchScreenState extends State<SearchScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    const Text(
+
+                    Text(
                       "Where do you want to go",
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
+
                     const SizedBox(height: 25),
 
                     /// SEARCH
@@ -103,7 +122,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
@@ -115,25 +134,44 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                       child: TextField(
                         controller: _searchController,
+
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+
                         onChanged: (value) {
                           setState(() {
                             filteredProvinces = provinces.where((province) {
                               return province.toLowerCase().contains(
-                                value.toLowerCase(),
-                              );
+                                    value.toLowerCase(),
+                                  );
                             }).toList();
                           });
                         },
-                        decoration: const InputDecoration(
+
+                        decoration: InputDecoration(
                           border: InputBorder.none,
-                          icon: Icon(Icons.search),
+
+                          icon: Icon(
+                            Icons.search,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+
                           hintText: "Search Place...",
+
+                          hintStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.5),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 10),
 
               /// GRID PROVINCE
@@ -149,16 +187,26 @@ class _SearchScreenState extends State<SearchScreen> {
                     childAspectRatio: 1.4,
                   ),
                   itemBuilder: (context, index) {
+                    final province = filteredProvinces[index];
+
                     return GestureDetector(
                       onTap: () {
                         setState(() {
-                          selectedProvince = filteredProvinces[index];
+                          selectedProvince = province;
                         });
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE6F1F2),
+                          color: selectedProvince == province
+                              ? const Color(0xFF007C89).withOpacity(0.18)
+                              : Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(30),
+                          border: selectedProvince == province
+                              ? Border.all(
+                                  color: const Color(0xFF007C89),
+                                  width: 1.4,
+                                )
+                              : null,
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.08),
@@ -171,7 +219,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Text(
-                              filteredProvinces[index],
+                              province,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontSize: 16,
@@ -198,26 +246,37 @@ class _SearchScreenState extends State<SearchScreen> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return Center(
-                          child: Text('Belum ada wisata di $selectedProvince'),
+                        return const Center(
+                          child: CircularProgressIndicator(),
                         );
                       }
+
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Belum ada wisata di $selectedProvince',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        );
+                      }
+
                       final wisata = snapshot.data!.docs;
+
                       return ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: wisata.length,
                         itemBuilder: (context, index) {
                           final data =
                               wisata[index].data() as Map<String, dynamic>;
+
                           return Card(
+                            color: Theme.of(context).cardColor,
                             margin: const EdgeInsets.only(bottom: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-
                             child: ListTile(
                               onTap: () {
                                 Navigator.push(
@@ -239,7 +298,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                   ),
                                 );
                               },
-
                               leading: data['image'] != null
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
@@ -251,10 +309,23 @@ class _SearchScreenState extends State<SearchScreen> {
                                       ),
                                     )
                                   : null,
-
-                              title: Text(data['title'] ?? ''),
-
-                              subtitle: Text(data['category'] ?? ''),
+                              title: Text(
+                                data['title'] ?? '',
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                data['category'] ?? '',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.7),
+                                ),
+                              ),
                             ),
                           );
                         },

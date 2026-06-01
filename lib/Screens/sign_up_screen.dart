@@ -98,7 +98,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return number;
   }
 
-  InputDecoration _figmaInputDecoration({
+  InputDecoration _figmaInputDecoration(
+    BuildContext context, {
     required String label,
     Widget? suffixIcon,
   }) {
@@ -117,10 +118,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       suffixIcon: suffixIcon,
       border: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
+        ),
       ),
       enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
+        ),
       ),
       focusedBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: Color(0xFF007C89), width: 1.4),
@@ -144,7 +149,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF5F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Form(
@@ -165,9 +170,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       minHeight: MediaQuery.of(context).size.height - 230,
                     ),
                     padding: const EdgeInsets.fromLTRB(28, 18, 28, 20),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEAF5F6),
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(26),
                         topRight: Radius.circular(26),
                       ),
@@ -213,7 +218,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                         TextFormField(
                           controller: _usernameController,
-                          decoration: _figmaInputDecoration(label: 'Username'),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          decoration: _figmaInputDecoration(
+                            context,
+                            label: 'Username',
+                          ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Username wajib diisi';
@@ -227,7 +238,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           decoration: _figmaInputDecoration(
+                            context,
                             label: 'E-mail Address',
                           ),
                           validator: (value) {
@@ -246,7 +261,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           decoration: _figmaInputDecoration(
+                            context,
                             label: 'No Telepon',
                           ),
                           validator: (value) {
@@ -272,7 +291,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           decoration: _figmaInputDecoration(
+                            context,
                             label: 'Password',
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -280,7 +303,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                                 size: 17,
-                                color: Colors.grey.shade500,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.55),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -305,7 +330,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: !_isConfirmPasswordVisible,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           decoration: _figmaInputDecoration(
+                            context,
                             label: 'Confirm Password',
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -313,7 +342,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                                 size: 17,
-                                color: Colors.grey.shade500,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.55),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -377,7 +408,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               'Already have an account? ',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                             GestureDetector(

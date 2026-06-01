@@ -38,8 +38,7 @@ class _EditScreenState extends State<EditScreen> {
   String? _base64Image;
 
   final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _descriptionController =
-      TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker();
 
@@ -95,21 +94,32 @@ class _EditScreenState extends State<EditScreen> {
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Theme.of(context).cardColor,
       builder: (_) {
         return SafeArea(
           child: Wrap(
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text("Take a picture"),
+                leading: const Icon(Icons.camera_alt, color: Colors.teal),
+                title: Text(
+                  "Take a picture",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text("Choose from gallery"),
+                leading: const Icon(Icons.photo_library, color: Colors.teal),
+                title: Text(
+                  "Choose from gallery",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
@@ -127,9 +137,7 @@ class _EditScreenState extends State<EditScreen> {
         _descriptionController.text.trim().isEmpty ||
         _base64Image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Lengkapi semua data terlebih dahulu"),
-        ),
+        const SnackBar(content: Text("Lengkapi semua data terlebih dahulu")),
       );
       return;
     }
@@ -155,18 +163,14 @@ class _EditScreenState extends State<EditScreen> {
       Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Postingan berhasil diperbarui"),
-        ),
+        const SnackBar(content: Text("Postingan berhasil diperbarui")),
       );
     } catch (e) {
       debugPrint(e.toString());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() {
@@ -185,7 +189,7 @@ class _EditScreenState extends State<EditScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(30),
         boxShadow: const [
           BoxShadow(
@@ -201,9 +205,13 @@ class _EditScreenState extends State<EditScreen> {
         inputFormatters: maxLength != null
             ? [LengthLimitingTextInputFormatter(maxLength)]
             : null,
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: hint,
+          hintStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          ),
         ),
       ),
     );
@@ -212,7 +220,7 @@ class _EditScreenState extends State<EditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF1F2),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -220,75 +228,71 @@ class _EditScreenState extends State<EditScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black12,
                           blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.teal,
-                      ),
+                      icon: const Icon(Icons.arrow_back, color: Colors.teal),
                       onPressed: () {
                         Navigator.pop(context);
                       },
                     ),
                   ),
+
                   GestureDetector(
                     onTap: () async {
-                      final LatLng? pickedLocation =
-                          await Navigator.push(
+                      final LatLng? pickedLocation = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const PickLocationScreen(),
+                          builder: (_) => const PickLocationScreen(),
                         ),
                       );
 
                       if (pickedLocation != null) {
                         setState(() {
-                          _latitude =
-                              pickedLocation.latitude;
-                          _longitude =
-                              pickedLocation.longitude;
+                          _latitude = pickedLocation.latitude;
+                          _longitude = pickedLocation.longitude;
                         });
                       }
                     },
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 25,
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius:
-                            BorderRadius.circular(20),
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Text(
                             "Edit Lokasi",
                             style: TextStyle(
                               fontSize: 18,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
-                          SizedBox(width: 10),
-                          Icon(
-                            Icons.location_on,
-                            color: Colors.red,
-                          ),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.location_on, color: Colors.red),
                         ],
                       ),
                     ),
@@ -304,29 +308,34 @@ class _EditScreenState extends State<EditScreen> {
                   height: 280,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.circular(30),
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 12,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         "Edit Photo",
                         style: TextStyle(
                           fontSize: 20,
-                          color: Colors.black54,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.7),
                         ),
                       ),
+
                       Expanded(
                         child: Center(
                           child: _image != null
                               ? ClipRRect(
-                                  borderRadius:
-                                      BorderRadius.circular(
-                                    20,
-                                  ),
+                                  borderRadius: BorderRadius.circular(20),
                                   child: Image.file(
                                     _image!,
                                     width: 180,
@@ -336,23 +345,20 @@ class _EditScreenState extends State<EditScreen> {
                                 )
                               : (_base64Image != null
                                     ? ClipRRect(
-                                        borderRadius:
-                                            BorderRadius
-                                                .circular(
-                                          20,
-                                        ),
+                                        borderRadius: BorderRadius.circular(20),
                                         child: Image.memory(
-                                          base64Decode(
-                                            _base64Image!,
-                                          ),
+                                          base64Decode(_base64Image!),
                                           width: 180,
                                           height: 180,
                                           fit: BoxFit.cover,
                                         ),
                                       )
-                                    : const Icon(
+                                    : Icon(
                                         Icons.add,
                                         size: 50,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       )),
                         ),
                       ),
@@ -373,8 +379,7 @@ class _EditScreenState extends State<EditScreen> {
 
               _buildTextField(
                 hint: "Description",
-                controller:
-                    _descriptionController,
+                controller: _descriptionController,
                 maxLines: 5,
               ),
 
@@ -383,26 +388,20 @@ class _EditScreenState extends State<EditScreen> {
               SizedBox(
                 height: 70,
                 child: ElevatedButton(
-                  onPressed:
-                      _isUploading ? null : _updatePost,
+                  onPressed: _isUploading ? null : _updatePost,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF79B7B5),
+                    backgroundColor: const Color(0xFF79B7B5),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(40),
+                      borderRadius: BorderRadius.circular(40),
                     ),
                   ),
                   child: _isUploading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
+                      ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           "Update",
                           style: TextStyle(
                             fontSize: 30,
-                            fontWeight:
-                                FontWeight.bold,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),

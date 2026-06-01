@@ -8,7 +8,7 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF5F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
           Image.asset(
@@ -27,9 +27,9 @@ class WelcomeScreen extends StatelessWidget {
                   horizontal: 28,
                   vertical: 32,
                 ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEAF5F6),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(26),
                     topRight: Radius.circular(26),
                   ),
@@ -53,7 +53,9 @@ class WelcomeScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
                         height: 1.5,
                       ),
                     ),
@@ -103,7 +105,10 @@ class WelcomeScreen extends StatelessWidget {
                           );
                         },
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF007C89)),
+                          side: const BorderSide(
+                            color: Color(0xFF007C89),
+                            width: 1.2,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25),
                           ),

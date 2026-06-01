@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -27,13 +25,11 @@ class _RouteScreenState extends State<RouteScreen> {
       "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjgzNWE1MzU5ZmY4NDQ2OGE4ZmNlZWQ1MDk3NDgyZDEwIiwiaCI6Im11cm11cjY0In0=";
 
   LatLng? currentLocation;
-
   List<LatLng> routePoints = [];
 
   bool loading = true;
 
   double distanceKm = 0;
-  double durationHour = 0;
 
   String carEstimate = "-";
   String motorEstimate = "-";
@@ -97,15 +93,11 @@ class _RouteScreenState extends State<RouteScreen> {
       );
 
       final feature = response.data["features"][0];
-
       final summary = feature["properties"]["summary"];
 
       distanceKm = summary["distance"] / 1000;
 
-      durationHour = summary["duration"] / 3600;
-
       carEstimate = convertDuration(summary["duration"]);
-
       motorEstimate = convertDuration(summary["duration"] * 0.9);
 
       final coordinates = feature["geometry"]["coordinates"];
@@ -116,8 +108,7 @@ class _RouteScreenState extends State<RouteScreen> {
 
       calculateTrainAndPlane();
     } catch (e) {
-      print("ERROR ROUTE:");
-      print(e);
+      debugPrint("ERROR ROUTE: $e");
     }
   }
 
@@ -152,11 +143,9 @@ class _RouteScreenState extends State<RouteScreen> {
     }
 
     final trainHours = distanceKm / 80;
-
     final planeHours = distanceKm / 700;
 
     trainEstimate = convertDuration(trainHours * 3600);
-
     planeEstimate = convertDuration(planeHours * 3600);
   }
 
@@ -174,12 +163,17 @@ class _RouteScreenState extends State<RouteScreen> {
     return "$hours jam $minutes menit";
   }
 
-  Widget transportTile(IconData icon, String title, String value) {
+  Widget transportTile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String value,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
@@ -189,7 +183,10 @@ class _RouteScreenState extends State<RouteScreen> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
           Text(
@@ -209,8 +206,7 @@ class _RouteScreenState extends State<RouteScreen> {
     final destination = LatLng(widget.latitude, widget.longitude);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF8FA),
-
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -220,14 +216,12 @@ class _RouteScreenState extends State<RouteScreen> {
                     initialCenter: destination,
                     initialZoom: 7,
                   ),
-
                   children: [
                     TileLayer(
                       urlTemplate:
                           "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                       userAgentPackageName: "com.example.jelajah_nusa",
                     ),
-
                     if (routePoints.isNotEmpty)
                       PolylineLayer(
                         polylines: [
@@ -238,7 +232,6 @@ class _RouteScreenState extends State<RouteScreen> {
                           ),
                         ],
                       ),
-
                     MarkerLayer(
                       markers: [
                         if (currentLocation != null)
@@ -252,7 +245,6 @@ class _RouteScreenState extends State<RouteScreen> {
                               size: 30,
                             ),
                           ),
-
                         Marker(
                           point: destination,
                           width: 60,
@@ -272,12 +264,15 @@ class _RouteScreenState extends State<RouteScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: CircleAvatar(
-                      backgroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).cardColor,
                       child: IconButton(
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        icon: const Icon(Icons.arrow_back),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     ),
                   ),
@@ -289,7 +284,7 @@ class _RouteScreenState extends State<RouteScreen> {
                     margin: const EdgeInsets.all(20),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: const [
                         BoxShadow(color: Colors.black12, blurRadius: 10),
@@ -301,39 +296,58 @@ class _RouteScreenState extends State<RouteScreen> {
                         children: [
                           Text(
                             widget.locationName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
 
                           const SizedBox(height: 10),
 
-                          Text("Jarak ${distanceKm.toStringAsFixed(1)} km"),
+                          Text(
+                            "Jarak ${distanceKm.toStringAsFixed(1)} km",
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
 
                           const SizedBox(height: 20),
 
                           transportTile(
+                            context,
                             Icons.directions_car,
                             "Mobil",
                             carEstimate,
                           ),
 
                           transportTile(
+                            context,
                             Icons.motorcycle,
                             "Motor",
                             motorEstimate,
                           ),
 
                           transportTile(
+                            context,
                             Icons.directions_walk,
                             "Pejalan Kaki",
                             walkEstimate,
                           ),
 
-                          transportTile(Icons.train, "Kereta", trainEstimate),
+                          transportTile(
+                            context,
+                            Icons.train,
+                            "Kereta",
+                            trainEstimate,
+                          ),
 
-                          transportTile(Icons.flight, "Pesawat", planeEstimate),
+                          transportTile(
+                            context,
+                            Icons.flight,
+                            "Pesawat",
+                            planeEstimate,
+                          ),
                         ],
                       ),
                     ),

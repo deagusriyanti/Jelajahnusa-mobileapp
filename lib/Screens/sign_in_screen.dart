@@ -140,33 +140,49 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  InputDecoration _inputDecoration({
+  InputDecoration _inputDecoration(
+    BuildContext context, {
     required String label,
     Widget? suffixIcon,
   }) {
     return InputDecoration(
       labelText: label,
       floatingLabelBehavior: FloatingLabelBehavior.always,
+
       labelStyle: const TextStyle(
         color: Color(0xFF007C89),
         fontSize: 11,
         fontWeight: FontWeight.w800,
       ),
+
       floatingLabelStyle: const TextStyle(
         color: Color(0xFF007C89),
         fontSize: 11,
         fontWeight: FontWeight.w800,
       ),
+
       suffixIcon: suffixIcon,
+
       border: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
+        ),
       ),
+
       enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25),
+        ),
       ),
+
       focusedBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: Color(0xFF007C89), width: 1.4),
       ),
+
+      hintStyle: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+      ),
+
       errorStyle: const TextStyle(fontSize: 10),
       contentPadding: const EdgeInsets.only(top: 20, bottom: 8),
       isDense: true,
@@ -174,6 +190,7 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Widget _authButton({
+    required BuildContext context,
     required Widget icon,
     required String text,
     required VoidCallback onTap,
@@ -184,8 +201,15 @@ class _SignInScreenState extends State<SignInScreen> {
         width: double.infinity,
         height: 50,
         decoration: BoxDecoration(
-          color: const Color(0xFFF4F7F2),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -194,10 +218,10 @@ class _SignInScreenState extends State<SignInScreen> {
             const SizedBox(width: 12),
             Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF14380B),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -216,7 +240,8 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF5F6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       body: SafeArea(
         child: SingleChildScrollView(
           child: Form(
@@ -229,6 +254,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   height: 255,
                   fit: BoxFit.cover,
                 ),
+
                 Transform.translate(
                   offset: const Offset(0, -28),
                   child: Container(
@@ -237,9 +263,9 @@ class _SignInScreenState extends State<SignInScreen> {
                       minHeight: MediaQuery.of(context).size.height - 230,
                     ),
                     padding: const EdgeInsets.fromLTRB(28, 18, 28, 20),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEAF5F6),
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(26),
                         topRight: Radius.circular(26),
                       ),
@@ -257,7 +283,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
+
                             const SizedBox(width: 42),
+
                             GestureDetector(
                               onTap: () {
                                 Navigator.pushReplacement(
@@ -286,7 +314,13 @@ class _SignInScreenState extends State<SignInScreen> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: _inputDecoration(label: 'E-mail Address'),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          decoration: _inputDecoration(
+                            context,
+                            label: 'E-mail Address',
+                          ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Email wajib diisi';
@@ -300,7 +334,11 @@ class _SignInScreenState extends State<SignInScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           decoration: _inputDecoration(
+                            context,
                             label: 'Password',
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -308,7 +346,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                                 size: 17,
-                                color: Colors.grey.shade500,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.55),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -381,20 +421,32 @@ class _SignInScreenState extends State<SignInScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: Divider(color: Colors.grey.shade300),
+                              child: Divider(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.2),
+                              ),
                             ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               child: Text(
                                 'or',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
                                 ),
                               ),
                             ),
                             Expanded(
-                              child: Divider(color: Colors.grey.shade300),
+                              child: Divider(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.2),
+                              ),
                             ),
                           ],
                         ),
@@ -402,6 +454,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 24),
 
                         _authButton(
+                          context: context,
                           onTap: _signInWithGoogle,
                           icon: Image.asset(
                             'assets/google.png',
@@ -415,6 +468,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 14),
 
                         _authButton(
+                          context: context,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -423,10 +477,10 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             );
                           },
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.phone_android,
                             size: 24,
-                            color: Color(0xFF14380B),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           text: 'Continue with Phone',
                         ),
@@ -440,7 +494,9 @@ class _SignInScreenState extends State<SignInScreen> {
                               'Need an account? ',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.7),
                               ),
                             ),
                             GestureDetector(

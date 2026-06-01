@@ -25,11 +25,11 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
             const SizedBox(height: 20),
 
             const Text(
-              "Likes",
+              'Likes',
               style: TextStyle(
                 fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF005B7F),
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF007C89),
               ),
             ),
 

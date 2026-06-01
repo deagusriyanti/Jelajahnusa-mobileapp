@@ -1,13 +1,41 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jelajah_nusa/Screens/sign_in_screen.dart';
-import 'package:jelajah_nusa/theme/theme_provider.dart';
-import 'package:jelajah_nusa/Screens/history_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+import 'package:jelajah_nusa/Screens/sign_in_screen.dart';
+import 'package:jelajah_nusa/Screens/history_screen.dart';
+import 'package:jelajah_nusa/Screens/edit_profile_screen.dart';
+import 'package:jelajah_nusa/theme/theme_provider.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Future<DocumentSnapshot>? _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshUserData();
+  }
+
+  void _refreshUserData() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      _userFuture = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,20 +61,28 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 18),
 
               FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user?.uid)
-                    .get(),
+                future: _userFuture,
                 builder: (context, snapshot) {
                   String username = user?.displayName ?? 'User';
                   String email = user?.email ?? '';
+                  String? photoBase64;
+                  String? photoUrl = user?.photoURL;
 
                   if (snapshot.hasData && snapshot.data!.exists) {
                     final data = snapshot.data!.data() as Map<String, dynamic>;
 
-                    username = data['username'] ?? user?.displayName ?? 'User';
+                    username = data['username'] ?? username;
+                    email = data['email'] ?? email;
+                    photoBase64 = data['photoBase64'];
+                    photoUrl = data['photoUrl'] ?? photoUrl;
+                  }
 
-                    email = data['email'] ?? user?.email ?? '';
+                  ImageProvider? profileImage;
+
+                  if (photoBase64 != null && photoBase64.isNotEmpty) {
+                    profileImage = MemoryImage(base64Decode(photoBase64));
+                  } else if (photoUrl != null && photoUrl.isNotEmpty) {
+                    profileImage = NetworkImage(photoUrl);
                   }
 
                   return Container(
@@ -70,14 +106,14 @@ class ProfileScreen extends StatelessWidget {
                           backgroundColor: Theme.of(
                             context,
                           ).scaffoldBackgroundColor,
-                          backgroundImage: user?.photoURL != null
-                              ? NetworkImage(user!.photoURL!)
-                              : null,
-                          child: user?.photoURL == null
+                          backgroundImage: profileImage,
+                          child: profileImage == null
                               ? Icon(
                                   Icons.person,
                                   size: 42,
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
                                 )
                               : null,
                         ),
@@ -115,7 +151,20 @@ class ProfileScreen extends StatelessWidget {
                 context: context,
                 icon: Icons.edit_outlined,
                 title: 'Edit Profile',
-                onTap: () {},
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  );
+
+                  if (result == true) {
+                    setState(() {
+                      _refreshUserData();
+                    });
+                  }
+                },
               ),
 
               const SizedBox(height: 14),
@@ -127,9 +176,7 @@ class ProfileScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const HistoryScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const HistoryScreen()),
                   );
                 },
               ),
@@ -251,7 +298,11 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: Colors.grey.shade700),
+            Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
             const SizedBox(width: 14),
             Text(
               title,
