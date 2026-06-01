@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:jelajah_nusa/Screens/detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -214,20 +217,44 @@ class _SearchScreenState extends State<SearchScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
+
                             child: ListTile(
-                              leading: data['imageUrl'] != null
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DetailScreen(
+                                      postId: wisata[index].id,
+                                      imageBase64: data['image'] ?? '',
+                                      description: data['description'] ?? '',
+                                      createdAt:
+                                          (data['createdAt'] as Timestamp)
+                                              .toDate(),
+                                      fullName: data['fullName'] ?? '',
+                                      latitude: data['latitude'] ?? 0.0,
+                                      longitude: data['longitude'] ?? 0.0,
+                                      category: data['category'] ?? '',
+                                      heroTag: 'search-$index',
+                                    ),
+                                  ),
+                                );
+                              },
+
+                              leading: data['image'] != null
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child: Image.network(
-                                        data['imageUrl'],
+                                      child: Image.memory(
+                                        base64Decode(data['image']),
                                         width: 60,
                                         height: 60,
                                         fit: BoxFit.cover,
                                       ),
                                     )
                                   : null,
+
                               title: Text(data['title'] ?? ''),
-                              subtitle: Text(data['location'] ?? ''),
+
+                              subtitle: Text(data['category'] ?? ''),
                             ),
                           );
                         },

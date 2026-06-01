@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jelajah_nusa/screens/add_post_screen.dart';
 import 'package:jelajah_nusa/screens/detail_screen.dart';
 import 'package:jelajah_nusa/screens/sign_in_screen.dart';
@@ -40,22 +41,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => const SignInScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const SignInScreen()),
       (route) => false,
     );
   }
 
-  Future<void> toggleLike(
-    String postId,
-    List likedBy,
-  ) async {
+  Future<void> toggleLike(String postId, List likedBy) async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    final postRef = FirebaseFirestore.instance
-        .collection('posts')
-        .doc(postId);
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
 
     if (likedBy.contains(uid)) {
       await postRef.update({
@@ -80,25 +74,18 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             /// TOP BAR
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 20,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
 
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFFBFEAEA),
-                    Color(0xFFEAF1F2),
-                  ],
+                  colors: [Color(0xFFBFEAEA), Color(0xFFEAF1F2)],
                 ),
               ),
 
               child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                 children: [
                   const Text(
@@ -119,8 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const AddPostScreen(),
+                              builder: (context) => const AddPostScreen(),
                             ),
                           );
                         },
@@ -129,12 +115,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.all(10),
 
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: const Color(0xFF005B7F),
-                            ),
+                            border: Border.all(color: const Color(0xFF005B7F)),
 
-                            borderRadius:
-                                BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
                           ),
 
                           child: const Icon(
@@ -143,8 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-
-          ],
+                    ],
                   ),
                 ],
               ),
@@ -160,28 +142,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('posts')
-                      .orderBy(
-                        'createdAt',
-                        descending: true,
-                      )
+                      .orderBy('createdAt', descending: true)
                       .snapshots(),
 
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return const Center(
-                        child:
-                            CircularProgressIndicator(),
-                      );
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
                     }
 
-                    if (!snapshot.hasData ||
-                        snapshot.data!.docs.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          "Belum ada postingan",
-                        ),
-                      );
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Center(child: Text("Belum ada postingan"));
                     }
 
                     final posts = snapshot.data!.docs;
@@ -191,91 +161,64 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       itemBuilder: (context, index) {
                         final data =
-                            posts[index].data()
-                                as Map<String, dynamic>;
-                        final fullName =
-                           data['fullName'] ?? 'Unknown User';
+                            posts[index].data() as Map<String, dynamic>;
+                        final fullName = data['fullName'] ?? 'Unknown User';
+                        final title = data['title'] ?? '';
+
                         /// FIRESTORE DOC ID
-                        final String postId =
-                            posts[index].id;
+                        final String postId = posts[index].id;
 
-                        final imageBase64 =
-                            data['image'] ?? '';
+                        final imageBase64 = data['image'] ?? '';
 
-                        final description =
-                            data['description'] ?? '';
+                        final description = data['description'] ?? '';
 
-                        final createdAt =
-                            DateTime.parse(
-                          data['createdAt'],
-                        );
+                        final DateTime createdAt =
+                            (data['createdAt'] as Timestamp).toDate();
 
-                        final latitude =
-                            data['latitude'] ?? 0.0;
+                        final latitude = data['latitude'] ?? 0.0;
 
-                        final longitude =
-                            data['longitude'] ?? 0.0;
+                        final longitude = data['longitude'] ?? 0.0;
 
-                        final category =
-                            data['category'] ?? '';
+                        final category = data['category'] ?? '';
 
-                        final likedBy =
-                            data['likedBy'] ?? [];
+                        final likedBy = data['likedBy'] ?? [];
 
-                        final likes =
-                            data['likes'] ?? 0;
+                        final likes = data['likes'] ?? 0;
 
-                        final heroTag =
-                            'image-$index';
+                        final heroTag = 'image-$index';
 
                         return GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    DetailScreen(
+                                builder: (context) => DetailScreen(
                                   postId: postId,
-                                  imageBase64:
-                                      imageBase64,
-                                  description:
-                                      description,
-                                  createdAt:
-                                      createdAt,
-                                  fullName:
-                                      fullName,
-                                  latitude:
-                                      latitude,
-                                  longitude:
-                                      longitude,
-                                  category:
-                                      category,
-                                  heroTag:
-                                      heroTag,
+                                  imageBase64: imageBase64,
+                                  description: description,
+                                  createdAt: createdAt,
+                                  fullName: fullName,
+                                  latitude: latitude,
+                                  longitude: longitude,
+                                  category: category,
+                                  heroTag: heroTag,
                                 ),
                               ),
                             );
                           },
 
                           child: Container(
-                            margin:
-                                const EdgeInsets.only(
-                              bottom: 14,
-                            ),
+                            margin: const EdgeInsets.only(bottom: 14),
 
-                            color:
-                                const Color(0xFFEAF1F2),
+                            color: const Color(0xFFEAF1F2),
 
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment
-                                      .start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
 
                               children: [
                                 /// USER INFO
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
                                     vertical: 12,
                                   ),
@@ -283,53 +226,35 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: Row(
                                     children: [
                                       const Icon(
-                                        Icons
-                                            .account_circle_outlined,
+                                        Icons.account_circle_outlined,
                                         size: 34,
-                                        color: Color(
-                                          0xFF005B7F,
-                                        ),
+                                        color: Color(0xFF005B7F),
                                       ),
 
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
+                                      const SizedBox(width: 10),
 
                                       Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment
-                                                .start,
+                                            CrossAxisAlignment.start,
 
                                         children: [
                                           Text(
                                             fullName,
 
-                                            style:
-                                                const TextStyle(
-                                              fontWeight:
-                                                  FontWeight
-                                                      .bold,
-                                              fontSize:
-                                                  16,
-                                              color: Color(
-                                                0xFF005B7F,
-                                              ),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Color(0xFF005B7F),
                                             ),
                                           ),
 
-                                          if (category
-                                              .toString()
-                                              .isNotEmpty)
+                                          if (category.toString().isNotEmpty)
                                             Text(
                                               category,
 
-                                              style:
-                                                  const TextStyle(
-                                                color:
-                                                    Colors
-                                                        .teal,
-                                                fontSize:
-                                                    13,
+                                              style: const TextStyle(
+                                                color: Colors.teal,
+                                                fontSize: 13,
                                               ),
                                             ),
                                         ],
@@ -338,19 +263,110 @@ class _HomeScreenState extends State<HomeScreen> {
                                       const Spacer(),
 
                                       Text(
-                                        formatTime(
-                                          createdAt,
-                                        ),
+                                        formatTime(createdAt),
 
-                                        style:
-                                            const TextStyle(
-                                          color:
-                                              Colors
-                                                  .grey,
-                                          fontSize:
-                                              13,
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 13,
                                         ),
                                       ),
+
+                                      /// TITIK 3
+                                      if (data['uid'] ==
+                                          FirebaseAuth
+                                              .instance
+                                              .currentUser!
+                                              .uid)
+                                        PopupMenuButton<String>(
+                                          icon: const Icon(
+                                            Icons.more_vert,
+                                            color: Colors.grey,
+                                          ),
+                                          onSelected: (value) async {
+                                            if (value == 'delete') {
+                                              await FirebaseFirestore.instance
+                                                  .collection('posts')
+                                                  .doc(postId)
+                                                  .delete();
+                                            }
+
+                                            if (value == 'edit') {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) {
+                                                  final TextEditingController
+                                                  descController =
+                                                      TextEditingController(
+                                                        text: description,
+                                                      );
+
+                                                  return AlertDialog(
+                                                    title: const Text(
+                                                      "Edit Postingan",
+                                                    ),
+                                                    content: TextField(
+                                                      controller:
+                                                          descController,
+                                                      maxLines: 3,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                            hintText:
+                                                                "Edit deskripsi",
+                                                          ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                        },
+                                                        child: const Text(
+                                                          "Batal",
+                                                        ),
+                                                      ),
+
+                                                      ElevatedButton(
+                                                        onPressed: () async {
+                                                          await FirebaseFirestore
+                                                              .instance
+                                                              .collection(
+                                                                'posts',
+                                                              )
+                                                              .doc(postId)
+                                                              .update({
+                                                                'description':
+                                                                    descController
+                                                                        .text,
+                                                              });
+
+                                                          if (context.mounted) {
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                          }
+                                                        },
+                                                        child: const Text(
+                                                          "Simpan",
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            }
+                                          },
+                                          itemBuilder: (context) => [
+                                            const PopupMenuItem(
+                                              value: 'edit',
+                                              child: Text("Edit"),
+                                            ),
+                                            const PopupMenuItem(
+                                              value: 'delete',
+                                              child: Text("Hapus"),
+                                            ),
+                                          ],
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -360,109 +376,77 @@ class _HomeScreenState extends State<HomeScreen> {
                                   tag: heroTag,
 
                                   child: ClipRRect(
-                                    borderRadius:
-                                        BorderRadius.circular(
-                                      8,
-                                    ),
+                                    borderRadius: BorderRadius.circular(8),
 
                                     child: Image.memory(
-                                      base64Decode(
-                                        imageBase64,
-                                      ),
+                                      base64Decode(imageBase64),
 
                                       height: 250,
-                                      width:
-                                          double.infinity,
-                                      fit:
-                                          BoxFit.cover,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
                                 ),
 
                                 /// DESCRIPTION & LIKE
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 20,
                                     vertical: 16,
                                   ),
 
                                   child: Row(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment
-                                            .start,
+                                        CrossAxisAlignment.start,
 
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          description,
+                                          title,
 
                                           maxLines: 3,
-                                          overflow:
-                                              TextOverflow
-                                                  .ellipsis,
+                                          overflow: TextOverflow.ellipsis,
 
-                                          style:
-                                              const TextStyle(
-                                            fontSize:
-                                                16,
-                                            fontWeight:
-                                                FontWeight
-                                                    .bold,
-                                            color: Color(
-                                              0xFF007A8A,
-                                            ),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF007A8A),
                                           ),
                                         ),
                                       ),
 
-                                      const SizedBox(
-                                        width: 12,
-                                      ),
+                                      const SizedBox(width: 12),
 
                                       Column(
                                         children: [
                                           GestureDetector(
                                             onTap: () {
-                                              toggleLike(
-                                                postId,
-                                                likedBy,
-                                              );
+                                              toggleLike(postId, likedBy);
                                             },
 
                                             child: Icon(
                                               likedBy.contains(
-                                                      FirebaseAuth
-                                                          .instance
-                                                          .currentUser!
-                                                          .uid)
-                                                  ? Icons
-                                                      .favorite
-                                                  : Icons
-                                                      .favorite_border,
+                                                    FirebaseAuth
+                                                        .instance
+                                                        .currentUser!
+                                                        .uid,
+                                                  )
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
 
-                                              color:
-                                                  Colors
-                                                      .red,
+                                              color: Colors.red,
                                               size: 34,
                                             ),
                                           ),
 
-                                          const SizedBox(
-                                            height: 4,
-                                          ),
+                                          const SizedBox(height: 4),
 
                                           Text(
-                                            likes
-                                                .toString(),
+                                            likes.toString(),
 
-                                            style:
-                                                const TextStyle(
-                                              color:
-                                                  Colors
-                                                      .grey,
-                                              fontSize:
-                                                  16,
+                                            style: const TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 16,
                                             ),
                                           ),
                                         ],

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:jelajah_nusa/screens/pick_location_screen.dart';
@@ -270,6 +271,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       }
 
       await FirebaseFirestore.instance.collection('posts').add({
+        'uid': FirebaseAuth.instance.currentUser!.uid,
         'title': _titleController.text,
         'description': _descriptionController.text,
         'fullName': username,
@@ -281,7 +283,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
         'likes': 0,
         'likedBy': [],
         'createdAt': FieldValue.serverTimestamp(),
-        'userId': uid,
       });
       if (!mounted) return;
       Navigator.pop(context);
@@ -340,6 +341,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
     required String hint,
     required TextEditingController controller,
     int maxLines = 1,
+    int? maxLength,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -357,6 +359,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        inputFormatters: maxLength != null
+            ? [LengthLimitingTextInputFormatter(maxLength)]
+            : null,
         decoration: InputDecoration(border: InputBorder.none, hintText: hint),
       ),
     );
@@ -499,7 +504,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
               const SizedBox(height: 24),
 
               /// TITLE
-              _buildTextField(hint: 'Caption', controller: _titleController),
+              _buildTextField(
+                hint: 'Caption',
+                controller: _titleController,
+                maxLength: 30,
+              ),
+
               const SizedBox(height: 24),
 
               /// DESCRIPTION
