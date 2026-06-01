@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
+import 'package:jelajah_nusa/Screens/map_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'full_image_screen.dart';
@@ -317,8 +318,19 @@ Future<void> deleteReply(
                                   const SizedBox(height: 10),
 
                                   /// LOCATION
-                                  GestureDetector(
-                                    onTap: openMap,
+                                 GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => MapScreen(
+                                            latitude: widget.latitude,
+                                            longitude: widget.longitude,
+                                            locationName: locationName,
+                                          ),
+                                        ),
+                                      );
+                                    },
 
                                     child: Row(
                                       children: [
@@ -333,7 +345,6 @@ Future<void> deleteReply(
                                         Expanded(
                                           child: Text(
                                             locationName,
-
                                             style: TextStyle(
                                               color: Colors.grey[700],
                                               fontSize: 15,
