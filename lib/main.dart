@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
+import 'package:jelajah_nusa/Helper/notification_service.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -130,6 +131,8 @@ class _MyAppState extends State<MyApp> {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
     await messaging.subscribeToTopic(topic);
+
+    debugPrint('BERHASIL SUBSCRIBE KE TOPIC: $topic');
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.data.isNotEmpty) {
