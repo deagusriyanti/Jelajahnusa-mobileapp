@@ -6,8 +6,6 @@ import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'full_image_screen.dart';
-
 class DetailScreen extends StatefulWidget {
   const DetailScreen({
     super.key,
@@ -41,7 +39,6 @@ enum CommentFilter { top, newest }
 class _DetailScreenState extends State<DetailScreen> {
   final TextEditingController _commentController = TextEditingController();
 
-  final TextEditingController _replyController = TextEditingController();
 
   String locationName = "Loading location...";
   CommentFilter selectedFilter = CommentFilter.newest;
@@ -52,6 +49,53 @@ class _DetailScreenState extends State<DetailScreen> {
     super.initState();
     getLocationName();
   }
+
+  void _showFullscreenImage() {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black,
+    builder: (_) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 5,
+                child: Hero(
+                  tag: widget.heroTag,
+                  child: Image.memory(
+                    base64Decode(widget.imageBase64),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: CircleAvatar(
+                  backgroundColor: Colors.black54,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   /// GET LOCATION NAME
   Future<void> getLocationName() async {
@@ -222,32 +266,21 @@ Future<void> deleteReply(
         body: Stack(
           children: [
             /// IMAGE
-            SizedBox(
-              height: 360,
-              width: double.infinity,
-
-              child: Hero(
-                tag: widget.heroTag,
-
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => FullscreenImageScreen(
-                          imageBase64: widget.imageBase64,
-                        ),
-                      ),
-                    );
-                  },
-
-                  child: Image.memory(
-                    base64Decode(widget.imageBase64),
-                    fit: BoxFit.cover,
-                  ),
+          SizedBox(
+            height: 360,
+            width: double.infinity,
+            child: Hero(
+              tag: widget.heroTag,
+              child: GestureDetector(
+                onTap: _showFullscreenImage,
+                child: Image.memory(
+                  base64Decode(widget.imageBase64),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
+          ),
+            
 
             /// BACK BUTTON
             SafeArea(
@@ -1024,7 +1057,7 @@ Future<void> deleteReply(
 
                                                               child: Text(
                                                                 isExpanded
-                                                                    ? "Sembunyikan balasan"
+                                                                    ? "Hide replies"
                                                                     : "${data['replyCount'] ?? replies.length} replies",
                                                                 style: const TextStyle(
                                                                   color: Colors
