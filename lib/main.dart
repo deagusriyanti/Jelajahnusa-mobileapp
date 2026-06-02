@@ -1,15 +1,25 @@
 import 'package:jelajah_nusa/firebase_options.dart';
 import 'package:jelajah_nusa/Screens/splash_screen.dart';
 import 'package:jelajah_nusa/theme/theme_provider.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
-import 'package:jelajah_nusa/Helper/notification_service.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  debugPrint('BACKGROUND MESSAGE MASUK');
+  debugPrint('TITLE: ${message.notification?.title}');
+  debugPrint('BODY: ${message.notification?.body}');
+  debugPrint('DATA: ${message.data}');
+}
 
 Future<void> requestNotificationPermission() async {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -29,65 +39,7 @@ Future<void> requestNotificationPermission() async {
   }
 }
 
-Future<void> showBasicNotification(String? title, String? body) async {
-  const AndroidNotificationDetails android = AndroidNotificationDetails(
-    'default_channel',
-    'Notifikasi Default',
-    channelDescription: 'Notifikasi JelajahNusa',
-    importance: Importance.high,
-    priority: Priority.high,
-    showWhen: true,
-  );
-
-  const NotificationDetails platform = NotificationDetails(android: android);
-
-  await flutterLocalNotificationsPlugin.show(
-    0,
-    title ?? 'JelajahNusa',
-    body ?? '',
-    platform,
-  );
-}
-
-Future<void> showNotificationFromData(Map<String, dynamic> data) async {
-  final title = data['title'] ?? 'Pesan Baru';
-  final body = data['body'] ?? '';
-
-  const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-    'detail_channel',
-    'Notifikasi Detail',
-    channelDescription: 'Notifikasi Detail JelajahNusa',
-    importance: Importance.max,
-    priority: Priority.max,
-  );
-
-  const NotificationDetails platform = NotificationDetails(
-    android: androidDetails,
-  );
-
-  await flutterLocalNotificationsPlugin.show(1, title, body, platform);
-}
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  if (message.data.isNotEmpty) {
-    await showNotificationFromData(message.data);
-  } else {
-    await showBasicNotification(
-      message.notification?.title,
-      message.notification?.body,
-    );
-  }
-}
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
+Future<void> initializeLocalNotification() async {
   const AndroidInitializationSettings androidInit =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -97,6 +49,50 @@ Future<void> main() async {
 
   await flutterLocalNotificationsPlugin.initialize(settings);
 
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'jelajah_nusa_channel',
+    'Jelajah Nusa Notification',
+    description: 'Channel notifikasi aplikasi Jelajah Nusa',
+    importance: Importance.high,
+  );
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(channel);
+}
+
+Future<void> showBasicNotification(String? title, String? body) async {
+  const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    'jelajah_nusa_channel',
+    'Jelajah Nusa Notification',
+    channelDescription: 'Channel notifikasi aplikasi Jelajah Nusa',
+    importance: Importance.high,
+    priority: Priority.high,
+    showWhen: true,
+  );
+
+  const NotificationDetails notificationDetails = NotificationDetails(
+    android: androidDetails,
+  );
+
+  await flutterLocalNotificationsPlugin.show(
+    DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    title ?? 'Jelajah Nusa',
+    body ?? 'Ada informasi terbaru',
+    notificationDetails,
+  );
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  await initializeLocalNotification();
   await requestNotificationPermission();
 
   runApp(
@@ -135,14 +131,20 @@ class _MyAppState extends State<MyApp> {
     debugPrint('BERHASIL SUBSCRIBE KE TOPIC: $topic');
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.data.isNotEmpty) {
-        showNotificationFromData(message.data);
-      } else {
-        showBasicNotification(
-          message.notification?.title,
-          message.notification?.body,
-        );
-      }
+      debugPrint('FOREGROUND MESSAGE MASUK');
+      debugPrint('TITLE: ${message.notification?.title}');
+      debugPrint('BODY: ${message.notification?.body}');
+      debugPrint('DATA: ${message.data}');
+
+      showBasicNotification(
+        message.notification?.title ?? message.data['title'],
+        message.notification?.body ?? message.data['body'],
+      );
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('NOTIFIKASI DIBUKA');
+      debugPrint('DATA: ${message.data}');
     });
   }
 

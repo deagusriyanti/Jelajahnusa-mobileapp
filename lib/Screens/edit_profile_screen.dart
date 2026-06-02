@@ -34,8 +34,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
 
     if (doc.exists) {
       final data = doc.data()!;
@@ -129,12 +131,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'username': _usernameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'photoBase64': _photoBase64,
-        'photoUrl': _photoUrl,
-      });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+            'username': _usernameController.text.trim(),
+            'phone': _phoneController.text.trim(),
+            'photoBase64': _photoBase64,
+            'photoUrl': _photoUrl,
+          });
+
+      final posts = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('uid', isEqualTo: user.uid)
+          .get();
+
+      for (final post in posts.docs) {
+        await post.reference.update({
+          'fullName': _usernameController.text.trim(),
+        });
+      }
 
       await user.updateDisplayName(_usernameController.text.trim());
 
@@ -169,18 +185,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
       focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(
-          color: Color(0xFF007C89),
-          width: 1.4,
-        ),
+        borderSide: BorderSide(color: Color(0xFF007C89), width: 1.4),
       ),
     );
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   ImageProvider? _getProfileImage() {
@@ -237,10 +250,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ? Icon(
                             Icons.person,
                             size: 52,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.6),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.6),
                           )
                         : null,
                   ),
@@ -265,9 +277,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             TextFormField(
               controller: _usernameController,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: _inputDecoration('Username'),
             ),
 
@@ -277,8 +287,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               enabled: false,
               initialValue: user?.email ?? '',
               style: TextStyle(
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
               decoration: _inputDecoration('Email'),
             ),
@@ -288,9 +297,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: _inputDecoration('No Telepon'),
             ),
 
