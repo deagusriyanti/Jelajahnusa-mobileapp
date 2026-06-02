@@ -149,6 +149,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       for (final post in posts.docs) {
         await post.reference.update({
           'fullName': _usernameController.text.trim(),
+          'userPhotoBase64': _photoBase64,
+          'userPhotoUrl': _photoUrl,
         });
       }
 

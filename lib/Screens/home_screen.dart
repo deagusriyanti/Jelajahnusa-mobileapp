@@ -4,10 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jelajah_nusa/screens/add_post_screen.dart';
-import 'package:jelajah_nusa/screens/edit_screen.dart';
 import 'package:jelajah_nusa/screens/detail_screen.dart';
+import 'package:jelajah_nusa/screens/edit_screen.dart';
 import 'package:jelajah_nusa/screens/sign_in_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -65,18 +64,42 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  ImageProvider? getProfileImage(Map<String, dynamic> data) {
+    if (data['userPhotoBase64'] != null &&
+        data['userPhotoBase64'].toString().isNotEmpty) {
+      return MemoryImage(base64Decode(data['userPhotoBase64']));
+    }
+
+    if (data['userPhotoUrl'] != null &&
+        data['userPhotoUrl'].toString().isNotEmpty) {
+      return NetworkImage(data['userPhotoUrl']);
+    }
+
+    return null;
+  }
+
+  DateTime getCreatedAt(Map<String, dynamic> data) {
+    final createdAt = data['createdAt'];
+
+    if (createdAt is Timestamp) {
+      return createdAt.toDate();
+    }
+
+    return DateTime.now();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
       body: SafeArea(
         child: Column(
           children: [
             /// TOP BAR
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -89,14 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       : [const Color(0xFFBFEAEA), const Color(0xFFEAF1F2)],
                 ),
               ),
-
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                 children: [
                   const Text(
                     "JelajahNusa",
-
                     style: TextStyle(
                       fontSize: 34,
                       fontWeight: FontWeight.bold,
@@ -104,35 +124,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  Row(
-                    children: [
-                      /// ADD POST BUTTON
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AddPostScreen(),
-                            ),
-                          );
-                        },
-
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-
-                          decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFF005B7F)),
-
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-
-                          child: const Icon(
-                            Icons.add,
-                            color: Color(0xFF005B7F),
-                          ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddPostScreen(),
                         ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF005B7F)),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
+                      child: const Icon(Icons.add, color: Color(0xFF005B7F)),
+                    ),
                   ),
                 ],
               ),
@@ -144,13 +152,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 onRefresh: () async {
                   setState(() {});
                 },
-
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('posts')
                       .orderBy('createdAt', descending: true)
                       .snapshots(),
-
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -172,34 +178,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return ListView.builder(
                       itemCount: posts.length,
-
                       itemBuilder: (context, index) {
                         final data =
                             posts[index].data() as Map<String, dynamic>;
-                        final fullName = data['fullName'] ?? 'Unknown User';
-                        final title = data['title'] ?? '';
 
-                        /// FIRESTORE DOC ID
                         final String postId = posts[index].id;
 
-                        final imageBase64 = data['image'] ?? '';
+                        final String fullName =
+                            data['fullName'] ?? 'Unknown User';
 
-                        final description = data['description'] ?? '';
+                        final String title = data['title'] ?? '';
 
-                        final DateTime createdAt =
-                            (data['createdAt'] as Timestamp).toDate();
+                        final String imageBase64 = data['image'] ?? '';
 
-                        final latitude = data['latitude'] ?? 0.0;
+                        final String description = data['description'] ?? '';
 
-                        final longitude = data['longitude'] ?? 0.0;
+                        final DateTime createdAt = getCreatedAt(data);
 
-                        final category = data['category'] ?? '';
+                        final double latitude = (data['latitude'] ?? 0.0)
+                            .toDouble();
 
-                        final likedBy = data['likedBy'] ?? [];
+                        final double longitude = (data['longitude'] ?? 0.0)
+                            .toDouble();
 
-                        final likes = data['likes'] ?? 0;
+                        final String category = data['category'] ?? '';
 
-                        final heroTag = 'image-$index';
+                        final List likedBy = data['likedBy'] ?? [];
+
+                        final int likes = data['likes'] ?? 0;
+
+                        final String heroTag = 'image-$postId';
+
+                        final ImageProvider? profileImage = getProfileImage(
+                          data,
+                        );
 
                         return GestureDetector(
                           onTap: () {
@@ -220,15 +232,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 14),
-
                             color: Theme.of(context).scaffoldBackgroundColor,
-
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-
                               children: [
                                 /// USER INFO
                                 Padding(
@@ -236,13 +244,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                     horizontal: 16,
                                     vertical: 12,
                                   ),
-
                                   child: Row(
                                     children: [
-                                      const Icon(
-                                        Icons.account_circle_outlined,
-                                        size: 34,
-                                        color: Color(0xFF005B7F),
+                                      CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).cardColor,
+                                        backgroundImage: profileImage,
+                                        child: profileImage == null
+                                            ? const Icon(
+                                                Icons.person,
+                                                size: 22,
+                                                color: Color(0xFF005B7F),
+                                              )
+                                            : null,
                                       ),
 
                                       const SizedBox(width: 10),
@@ -250,11 +266,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
-
                                         children: [
                                           Text(
                                             fullName,
-
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
@@ -265,7 +279,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                           if (category.toString().isNotEmpty)
                                             Text(
                                               category,
-
                                               style: const TextStyle(
                                                 color: Colors.teal,
                                                 fontSize: 13,
@@ -278,7 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                       Text(
                                         formatTime(createdAt),
-
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Theme.of(context)
@@ -288,12 +300,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
 
-                                      /// TITIK 3
-                                      if (data['uid'] ==
-                                          FirebaseAuth
-                                              .instance
-                                              .currentUser!
-                                              .uid)
+                                      if (data['uid'] == currentUser?.uid)
                                         PopupMenuButton<String>(
                                           icon: const Icon(
                                             Icons.more_vert,
@@ -307,29 +314,32 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   .delete();
                                             }
 
-                                           if (value == 'edit') {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => EditScreen(
-                                                  postId: postId,
-                                                  title: title,
-                                                  description: description,
-                                                  imageBase64: imageBase64,
-                                                  latitude: latitude,
-                                                  longitude: longitude,
-                                                  category: category,
+                                            if (value == 'edit') {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      EditScreen(
+                                                        postId: postId,
+                                                        title: title,
+                                                        description:
+                                                            description,
+                                                        imageBase64:
+                                                            imageBase64,
+                                                        latitude: latitude,
+                                                        longitude: longitude,
+                                                        category: category,
+                                                      ),
                                                 ),
-                                              ),
-                                            );
-                                          }
+                                              );
+                                            }
                                           },
-                                          itemBuilder: (context) => [
-                                            const PopupMenuItem(
+                                          itemBuilder: (context) => const [
+                                            PopupMenuItem(
                                               value: 'edit',
                                               child: Text("Edit"),
                                             ),
-                                            const PopupMenuItem(
+                                            PopupMenuItem(
                                               value: 'delete',
                                               child: Text("Hapus"),
                                             ),
@@ -340,21 +350,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
 
                                 /// IMAGE
-                                Hero(
-                                  tag: heroTag,
-
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-
-                                    child: Image.memory(
-                                      base64Decode(imageBase64),
-
-                                      height: 250,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
+                                if (imageBase64.isNotEmpty)
+                                  Hero(
+                                    tag: heroTag,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.memory(
+                                        base64Decode(imageBase64),
+                                        height: 250,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
-                                ),
 
                                 /// DESCRIPTION & LIKE
                                 Padding(
@@ -362,19 +370,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     horizontal: 20,
                                     vertical: 16,
                                   ),
-
                                   child: Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
-
                                     children: [
                                       Expanded(
                                         child: Text(
                                           title,
-
                                           maxLines: 3,
                                           overflow: TextOverflow.ellipsis,
-
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -391,17 +395,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                             onTap: () {
                                               toggleLike(postId, likedBy);
                                             },
-
                                             child: Icon(
-                                              likedBy.contains(
-                                                    FirebaseAuth
-                                                        .instance
-                                                        .currentUser!
-                                                        .uid,
-                                                  )
+                                              likedBy.contains(currentUser?.uid)
                                                   ? Icons.favorite
                                                   : Icons.favorite_border,
-
                                               color: Colors.red,
                                               size: 34,
                                             ),
@@ -411,7 +408,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                           Text(
                                             likes.toString(),
-
                                             style: TextStyle(
                                               fontSize: 16,
                                               color: Theme.of(context)
