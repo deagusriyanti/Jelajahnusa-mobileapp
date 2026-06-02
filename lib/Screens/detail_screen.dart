@@ -1,10 +1,12 @@
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
 import 'package:jelajah_nusa/Screens/map_screen.dart';
+import 'package:jelajah_nusa/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'full_image_screen.dart';
@@ -41,7 +43,6 @@ enum CommentFilter { top, newest }
 
 class _DetailScreenState extends State<DetailScreen> {
   final TextEditingController _commentController = TextEditingController();
-
   final TextEditingController _replyController = TextEditingController();
 
   String locationName = "Loading location...";
@@ -54,7 +55,6 @@ class _DetailScreenState extends State<DetailScreen> {
     getLocationName();
   }
 
-  /// GET LOCATION NAME
   Future<void> getLocationName() async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -76,7 +76,6 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  /// OPEN GOOGLE MAPS
   Future<void> openMap() async {
     final uri = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=${widget.latitude},${widget.longitude}',
@@ -93,13 +92,19 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  /// ADD COMMENT
   Future<void> addComment() async {
-    if (_commentController.text.trim().isEmpty) {
-      return;
-    }
+    if (_commentController.text.trim().isEmpty) return;
 
     final uid = FirebaseAuth.instance.currentUser!.uid;
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    final userData = userDoc.data();
+    final username = userData?['username'] ?? 'User';
+    final userPhotoBase64 = userData?['photoBase64'];
+    final userPhotoUrl = userData?['photoUrl'];
 
     await FirebaseFirestore.instance
         .collection('posts')
@@ -107,17 +112,23 @@ class _DetailScreenState extends State<DetailScreen> {
         .collection('comments')
         .add({
           'userId': uid,
-          'name': widget.fullName,
+          'name': username,
+          'userPhotoBase64': userPhotoBase64,
+          'userPhotoUrl': userPhotoUrl,
           'comment': _commentController.text.trim(),
           'createdAt': Timestamp.now(),
           'likes': 0,
           'likedBy': [],
         });
 
+    await showBasicNotification(
+      'Komentar Berhasil',
+      'Komentar berhasil ditambahkan',
+    );
+
     _commentController.clear();
   }
 
-  /// ADD REPLY
   Future<void> addReply(String commentId, String reply) async {
     if (reply.trim().isEmpty) return;
 
@@ -128,7 +139,10 @@ class _DetailScreenState extends State<DetailScreen> {
         .doc(uid)
         .get();
 
-    final username = userDoc.data()?['username'] ?? 'User';
+    final userData = userDoc.data();
+    final username = userData?['username'] ?? 'User';
+    final userPhotoBase64 = userData?['photoBase64'];
+    final userPhotoUrl = userData?['photoUrl'];
 
     await FirebaseFirestore.instance
         .collection('posts')
@@ -139,6 +153,8 @@ class _DetailScreenState extends State<DetailScreen> {
         .add({
           'userId': uid,
           'name': username,
+          'userPhotoBase64': userPhotoBase64,
+          'userPhotoUrl': userPhotoUrl,
           'reply': reply,
           'createdAt': Timestamp.now(),
         });
@@ -149,6 +165,11 @@ class _DetailScreenState extends State<DetailScreen> {
         .collection('comments')
         .doc(commentId)
         .update({'replyCount': FieldValue.increment(1)});
+
+    await showBasicNotification(
+      'Balasan Berhasil',
+      'Balasan komentar berhasil dikirim',
+    );
   }
 
   Future<void> deleteComment(String commentId) async {
@@ -203,6 +224,70 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
+  Widget _buildLatestAuthorName() {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('posts')
+          .doc(widget.postId)
+          .snapshots(),
+      builder: (context, postSnapshot) {
+        String username = widget.fullName;
+
+        if (postSnapshot.hasData && postSnapshot.data!.exists) {
+          final postData = postSnapshot.data!.data() as Map<String, dynamic>;
+          final uid = postData['uid'];
+
+          if (uid != null) {
+            return StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(uid)
+                  .snapshots(),
+              builder: (context, userSnapshot) {
+                if (userSnapshot.hasData && userSnapshot.data!.exists) {
+                  final userData =
+                      userSnapshot.data!.data() as Map<String, dynamic>;
+
+                  username =
+                      userData['username'] ??
+                      postData['fullName'] ??
+                      widget.fullName;
+                }
+
+                return Text(
+                  username,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
+                );
+              },
+            );
+          }
+
+          username = postData['fullName'] ?? widget.fullName;
+        }
+
+        return Text(
+          username,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    _replyController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final createdAtFormatted = DateFormat(
@@ -211,20 +296,15 @@ class _DetailScreenState extends State<DetailScreen> {
 
     return DefaultTabController(
       length: 2,
-
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
         body: Stack(
           children: [
-            /// IMAGE
             SizedBox(
               height: 360,
               width: double.infinity,
-
               child: Hero(
                 tag: widget.heroTag,
-
                 child: GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -236,7 +316,6 @@ class _DetailScreenState extends State<DetailScreen> {
                       ),
                     );
                   },
-
                   child: Image.memory(
                     base64Decode(widget.imageBase64),
                     fit: BoxFit.cover,
@@ -245,21 +324,17 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
 
-            /// BACK BUTTON
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-
                 child: CircleAvatar(
                   backgroundColor: Theme.of(
                     context,
                   ).cardColor.withOpacity(0.85),
-
                   child: IconButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-
                     icon: Icon(
                       Icons.arrow_back,
                       color: Theme.of(context).colorScheme.onSurface,
@@ -269,55 +344,36 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
 
-            /// CONTENT
             DraggableScrollableSheet(
               initialChildSize: 0.62,
               minChildSize: 0.62,
               maxChildSize: 0.95,
-
               builder: (context, scrollController) {
                 return Container(
                   padding: const EdgeInsets.all(24),
-
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
-
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(35),
                       topRight: Radius.circular(35),
                     ),
                   ),
-
                   child: SingleChildScrollView(
                     controller: scrollController,
-
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       children: [
-                        /// USER & FAVORITE
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
-
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-
                                 children: [
-                                  Text(
-                                    widget.fullName,
-
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.teal,
-                                    ),
-                                  ),
+                                  _buildLatestAuthorName(),
 
                                   const SizedBox(height: 10),
 
-                                  /// LOCATION
                                   GestureDetector(
                                     onTap: () {
                                       Navigator.push(
@@ -331,7 +387,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                         ),
                                       );
                                     },
-
                                     child: Row(
                                       children: [
                                         const Icon(
@@ -339,9 +394,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                           color: Colors.red,
                                           size: 20,
                                         ),
-
                                         const SizedBox(width: 5),
-
                                         Expanded(
                                           child: Text(
                                             locationName,
@@ -361,34 +414,26 @@ class _DetailScreenState extends State<DetailScreen> {
 
                                   const SizedBox(height: 12),
 
-                                  /// CATEGORY
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 14,
                                       vertical: 8,
                                     ),
-
                                     decoration: BoxDecoration(
                                       color: Colors.teal.withOpacity(0.1),
-
                                       borderRadius: BorderRadius.circular(20),
                                     ),
-
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-
                                       children: [
                                         const Icon(
                                           Icons.category,
                                           size: 18,
                                           color: Colors.teal,
                                         ),
-
                                         const SizedBox(width: 6),
-
                                         Text(
                                           widget.category,
-
                                           style: const TextStyle(
                                             color: Colors.teal,
                                             fontWeight: FontWeight.bold,
@@ -400,6 +445,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                 ],
                               ),
                             ),
+
                             StreamBuilder<DocumentSnapshot>(
                               stream: FirebaseFirestore.instance
                                   .collection('posts')
@@ -415,12 +461,9 @@ class _DetailScreenState extends State<DetailScreen> {
                                         as Map<String, dynamic>;
 
                                 final likedBy = data['likedBy'] ?? [];
-
                                 final likes = data['likes'] ?? 0;
-
                                 final uid =
                                     FirebaseAuth.instance.currentUser!.uid;
-
                                 final isLiked = likedBy.contains(uid);
 
                                 return Column(
@@ -429,27 +472,21 @@ class _DetailScreenState extends State<DetailScreen> {
                                       backgroundColor: Theme.of(
                                         context,
                                       ).scaffoldBackgroundColor,
-
                                       child: IconButton(
                                         onPressed: () {
                                           toggleLike(widget.postId, likedBy);
                                         },
-
                                         icon: Icon(
                                           isLiked
                                               ? Icons.favorite
                                               : Icons.favorite_border,
-
                                           color: Colors.red,
                                         ),
                                       ),
                                     ),
-
                                     const SizedBox(height: 4),
-
                                     Text(
                                       likes.toString(),
-
                                       style: const TextStyle(
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold,
@@ -464,12 +501,10 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         const SizedBox(height: 20),
 
-                        /// TAB BAR
                         const TabBar(
                           labelColor: Colors.teal,
                           unselectedLabelColor: Colors.grey,
                           indicatorColor: Colors.teal,
-
                           tabs: [
                             Tab(text: "Description"),
                             Tab(text: "Comment"),
@@ -478,20 +513,15 @@ class _DetailScreenState extends State<DetailScreen> {
 
                         SizedBox(
                           height: 500,
-
                           child: TabBarView(
                             children: [
-                              /// DESCRIPTION TAB
                               SingleChildScrollView(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-
                                   children: [
                                     const SizedBox(height: 20),
-
                                     Text(
                                       widget.description,
-
                                       style: TextStyle(
                                         fontSize: 16,
                                         height: 1.8,
@@ -500,18 +530,14 @@ class _DetailScreenState extends State<DetailScreen> {
                                         ).colorScheme.onSurface,
                                       ),
                                     ),
-
                                     const SizedBox(height: 25),
-
                                     Row(
                                       children: [
                                         const Icon(
                                           Icons.calendar_month,
                                           color: Colors.teal,
                                         ),
-
                                         const SizedBox(width: 8),
-
                                         Text(createdAtFormatted),
                                       ],
                                     ),
@@ -519,11 +545,10 @@ class _DetailScreenState extends State<DetailScreen> {
                                 ),
                               ),
 
-                              /// COMMENT TAB
                               Column(
                                 children: [
-                                  /// INPUT COMMENT
                                   const SizedBox(height: 20),
+
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
@@ -544,17 +569,14 @@ class _DetailScreenState extends State<DetailScreen> {
                                         Expanded(
                                           child: TextField(
                                             controller: _commentController,
-
                                             style: TextStyle(
                                               color: Theme.of(
                                                 context,
                                               ).colorScheme.onSurface,
                                             ),
-
                                             decoration: InputDecoration(
                                               border: InputBorder.none,
                                               hintText: "Tulis komentar...",
-
                                               hintStyle: TextStyle(
                                                 color: Theme.of(context)
                                                     .colorScheme
@@ -564,7 +586,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                             ),
                                           ),
                                         ),
-
                                         IconButton(
                                           onPressed: addComment,
                                           icon: const Icon(
@@ -577,6 +598,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                   ),
 
                                   const SizedBox(height: 20),
+
                                   Row(
                                     children: [
                                       ChoiceChip(
@@ -589,9 +611,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                           });
                                         },
                                       ),
-
                                       const SizedBox(width: 10),
-
                                       ChoiceChip(
                                         label: const Text("Newest"),
                                         selected:
@@ -609,7 +629,6 @@ class _DetailScreenState extends State<DetailScreen> {
 
                                   const SizedBox(height: 10),
 
-                                  /// COMMENT LIST
                                   Expanded(
                                     child: StreamBuilder<QuerySnapshot>(
                                       stream: FirebaseFirestore.instance
@@ -623,7 +642,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                             descending: true,
                                           )
                                           .snapshots(),
-
                                       builder: (context, snapshot) {
                                         if (!snapshot.hasData) {
                                           return const Center(
@@ -634,17 +652,22 @@ class _DetailScreenState extends State<DetailScreen> {
                                         final comments = snapshot.data!.docs;
 
                                         if (comments.isEmpty) {
-                                          return const Center(
-                                            child: Text("Belum ada komentar"),
+                                          return Center(
+                                            child: Text(
+                                              "Belum ada komentar",
+                                              style: TextStyle(
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
+                                              ),
+                                            ),
                                           );
                                         }
 
                                         return ListView.builder(
                                           itemCount: comments.length,
-
                                           itemBuilder: (context, index) {
                                             final comment = comments[index];
-
                                             final data =
                                                 comment.data()
                                                     as Map<String, dynamic>;
@@ -653,38 +676,62 @@ class _DetailScreenState extends State<DetailScreen> {
                                               margin: const EdgeInsets.only(
                                                 bottom: 16,
                                               ),
-
                                               padding: const EdgeInsets.all(16),
-
                                               decoration: BoxDecoration(
                                                 color: Theme.of(
                                                   context,
                                                 ).scaffoldBackgroundColor,
-
                                                 borderRadius:
                                                     BorderRadius.circular(18),
                                               ),
-
                                               child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
-
                                                 children: [
-                                                  /// USER
                                                   Row(
                                                     children: [
                                                       CircleAvatar(
                                                         radius: 14,
                                                         backgroundColor:
                                                             Colors.grey[300],
-                                                        child: const Icon(
-                                                          Icons.person,
-                                                          size: 16,
-                                                        ),
+                                                        backgroundImage:
+                                                            data['userPhotoBase64'] !=
+                                                                    null &&
+                                                                data['userPhotoBase64']
+                                                                    .toString()
+                                                                    .isNotEmpty
+                                                            ? MemoryImage(
+                                                                base64Decode(
+                                                                  data['userPhotoBase64'],
+                                                                ),
+                                                              )
+                                                            : data['userPhotoUrl'] !=
+                                                                      null &&
+                                                                  data['userPhotoUrl']
+                                                                      .toString()
+                                                                      .isNotEmpty
+                                                            ? NetworkImage(
+                                                                data['userPhotoUrl'],
+                                                              )
+                                                            : null,
+                                                        child:
+                                                            (data['userPhotoBase64'] ==
+                                                                        null ||
+                                                                    data['userPhotoBase64']
+                                                                        .toString()
+                                                                        .isEmpty) &&
+                                                                (data['userPhotoUrl'] ==
+                                                                        null ||
+                                                                    data['userPhotoUrl']
+                                                                        .toString()
+                                                                        .isEmpty)
+                                                            ? const Icon(
+                                                                Icons.person,
+                                                                size: 16,
+                                                              )
+                                                            : null,
                                                       ),
-
                                                       const SizedBox(width: 10),
-
                                                       Expanded(
                                                         child: Text(
                                                           data['name'] ??
@@ -710,7 +757,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                                             Icons.more_vert,
                                                             size: 18,
                                                           ),
-
                                                           onSelected: (value) async {
                                                             if (value ==
                                                                 'delete') {
@@ -736,7 +782,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                                                         "Batal",
                                                                       ),
                                                                     ),
-
                                                                     ElevatedButton(
                                                                       onPressed: () =>
                                                                           Navigator.pop(
@@ -759,33 +804,38 @@ class _DetailScreenState extends State<DetailScreen> {
                                                               }
                                                             }
                                                           },
-
-                                                          itemBuilder: (context) => [
-                                                            const PopupMenuItem(
-                                                              value: 'delete',
-                                                              child: Row(
-                                                                children: [
-                                                                  Icon(
-                                                                    Icons
-                                                                        .delete,
-                                                                    color: Colors
-                                                                        .red,
+                                                          itemBuilder:
+                                                              (
+                                                                context,
+                                                              ) => const [
+                                                                PopupMenuItem(
+                                                                  value:
+                                                                      'delete',
+                                                                  child: Row(
+                                                                    children: [
+                                                                      Icon(
+                                                                        Icons
+                                                                            .delete,
+                                                                        color: Colors
+                                                                            .red,
+                                                                      ),
+                                                                      SizedBox(
+                                                                        width:
+                                                                            10,
+                                                                      ),
+                                                                      Text(
+                                                                        "Hapus",
+                                                                      ),
+                                                                    ],
                                                                   ),
-                                                                  SizedBox(
-                                                                    width: 10,
-                                                                  ),
-                                                                  Text("Hapus"),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          ],
+                                                                ),
+                                                              ],
                                                         ),
                                                     ],
                                                   ),
 
                                                   const SizedBox(height: 10),
 
-                                                  /// COMMENT
                                                   Text(
                                                     data['comment'] ?? '',
                                                     style: TextStyle(
@@ -794,11 +844,11 @@ class _DetailScreenState extends State<DetailScreen> {
                                                       ).colorScheme.onSurface,
                                                     ),
                                                   ),
+
                                                   const SizedBox(height: 8),
 
                                                   Row(
                                                     children: [
-                                                      /// LIKE
                                                       IconButton(
                                                         padding:
                                                             EdgeInsets.zero,
@@ -870,9 +920,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                                           }
                                                         },
                                                       ),
-
                                                       const SizedBox(width: 4),
-
                                                       Text(
                                                         "${data['likes'] ?? 0}",
                                                         style: const TextStyle(
@@ -880,236 +928,14 @@ class _DetailScreenState extends State<DetailScreen> {
                                                               FontWeight.bold,
                                                         ),
                                                       ),
-
                                                       const SizedBox(width: 20),
 
-                                                      /// REPLY
                                                       InkWell(
                                                         onTap: () {
-                                                          showModalBottomSheet(
-                                                            context: context,
-                                                            isScrollControlled:
-                                                                true,
-                                                            backgroundColor:
-                                                                Colors
-                                                                    .transparent,
-                                                            builder: (context) {
-                                                              final replyController =
-                                                                  TextEditingController();
-
-                                                              return Container(
-                                                                height:
-                                                                    MediaQuery.of(
-                                                                      context,
-                                                                    ).size.height *
-                                                                    0.75,
-                                                                padding: EdgeInsets.only(
-                                                                  left: 20,
-                                                                  right: 20,
-                                                                  top: 20,
-                                                                  bottom:
-                                                                      MediaQuery.of(
-                                                                        context,
-                                                                      ).viewInsets.bottom +
-                                                                      20,
-                                                                ),
-                                                                decoration: BoxDecoration(
-                                                                  color: Theme.of(
-                                                                    context,
-                                                                  ).cardColor,
-                                                                  borderRadius:
-                                                                      BorderRadius.vertical(
-                                                                        top: Radius.circular(
-                                                                          30,
-                                                                        ),
-                                                                      ),
-                                                                ),
-                                                                child: Column(
-                                                                  children: [
-                                                                    Container(
-                                                                      width: 60,
-                                                                      height: 6,
-                                                                      decoration: BoxDecoration(
-                                                                        color: Colors
-                                                                            .grey
-                                                                            .shade300,
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(
-                                                                              30,
-                                                                            ),
-                                                                      ),
-                                                                    ),
-
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          20,
-                                                                    ),
-
-                                                                    const Text(
-                                                                      "Reply Comment",
-                                                                      style: TextStyle(
-                                                                        fontSize:
-                                                                            22,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                      ),
-                                                                    ),
-
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          15,
-                                                                    ),
-
-                                                                    Container(
-                                                                      width: double
-                                                                          .infinity,
-                                                                      padding:
-                                                                          const EdgeInsets.all(
-                                                                            14,
-                                                                          ),
-                                                                      decoration: BoxDecoration(
-                                                                        color: Theme.of(
-                                                                          context,
-                                                                        ).scaffoldBackgroundColor,
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(
-                                                                              15,
-                                                                            ),
-                                                                      ),
-                                                                      child: Text(
-                                                                        data['comment'] ??
-                                                                            '',
-                                                                        maxLines:
-                                                                            3,
-                                                                        overflow:
-                                                                            TextOverflow.ellipsis,
-                                                                        style: TextStyle(
-                                                                          color: Colors
-                                                                              .grey
-                                                                              .shade700,
-                                                                        ),
-                                                                      ),
-                                                                    ),
-
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          20,
-                                                                    ),
-
-                                                                    Expanded(
-                                                                      child: TextField(
-                                                                        controller:
-                                                                            replyController,
-                                                                        autofocus:
-                                                                            true,
-                                                                        expands:
-                                                                            true,
-                                                                        maxLines:
-                                                                            null,
-                                                                        minLines:
-                                                                            null,
-                                                                        textAlignVertical:
-                                                                            TextAlignVertical.top,
-
-                                                                        style: TextStyle(
-                                                                          color: Theme.of(
-                                                                            context,
-                                                                          ).colorScheme.onSurface,
-                                                                        ),
-
-                                                                        decoration: InputDecoration(
-                                                                          hintText:
-                                                                              "Write your reply...",
-
-                                                                          hintStyle: TextStyle(
-                                                                            color:
-                                                                                Theme.of(
-                                                                                  context,
-                                                                                ).colorScheme.onSurface.withOpacity(
-                                                                                  0.5,
-                                                                                ),
-                                                                          ),
-
-                                                                          filled:
-                                                                              true,
-
-                                                                          fillColor: Theme.of(
-                                                                            context,
-                                                                          ).scaffoldBackgroundColor,
-
-                                                                          border: OutlineInputBorder(
-                                                                            borderRadius: BorderRadius.circular(
-                                                                              20,
-                                                                            ),
-                                                                            borderSide:
-                                                                                BorderSide.none,
-                                                                          ),
-
-                                                                          contentPadding: const EdgeInsets.all(
-                                                                            20,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-
-                                                                    const SizedBox(
-                                                                      height:
-                                                                          20,
-                                                                    ),
-
-                                                                    SizedBox(
-                                                                      width: double
-                                                                          .infinity,
-                                                                      height:
-                                                                          55,
-                                                                      child: ElevatedButton.icon(
-                                                                        icon: const Icon(
-                                                                          Icons
-                                                                              .send,
-                                                                        ),
-                                                                        label: const Text(
-                                                                          "Send Reply",
-                                                                          style: TextStyle(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                          ),
-                                                                        ),
-                                                                        style: ElevatedButton.styleFrom(
-                                                                          backgroundColor:
-                                                                              Colors.teal,
-                                                                          shape: RoundedRectangleBorder(
-                                                                            borderRadius: BorderRadius.circular(
-                                                                              18,
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        onPressed: () async {
-                                                                          await addReply(
-                                                                            comment.id,
-                                                                            replyController.text,
-                                                                          );
-
-                                                                          if (!mounted)
-                                                                            return;
-
-                                                                          setState(
-                                                                            () {
-                                                                              expandedReplies[comment.id] = true;
-                                                                            },
-                                                                          );
-
-                                                                          Navigator.pop(
-                                                                            context,
-                                                                          );
-                                                                        },
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              );
-                                                            },
+                                                          showReplySheet(
+                                                            comment.id,
+                                                            data['comment'] ??
+                                                                '',
                                                           );
                                                         },
                                                         child: const Row(
@@ -1138,8 +964,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                                     ],
                                                   ),
 
-                                                  /// REPLY BUTTON
-                                                  /// REPLIES
                                                   StreamBuilder<QuerySnapshot>(
                                                     stream: FirebaseFirestore
                                                         .instance
@@ -1150,7 +974,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                                         .collection('replies')
                                                         .orderBy('createdAt')
                                                         .snapshots(),
-
                                                     builder: (context, replySnapshot) {
                                                       if (!replySnapshot
                                                           .hasData) {
@@ -1182,7 +1005,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                                                       !isExpanded;
                                                                 });
                                                               },
-
                                                               child: Text(
                                                                 isExpanded
                                                                     ? "Sembunyikan balasan"
@@ -1215,12 +1037,10 @@ class _DetailScreenState extends State<DetailScreen> {
                                                                       left: 40,
                                                                       top: 10,
                                                                     ),
-
                                                                 padding:
                                                                     const EdgeInsets.all(
                                                                       12,
                                                                     ),
-
                                                                 decoration: BoxDecoration(
                                                                   color: Theme.of(
                                                                     context,
@@ -1234,10 +1054,49 @@ class _DetailScreenState extends State<DetailScreen> {
                                                                   crossAxisAlignment:
                                                                       CrossAxisAlignment
                                                                           .start,
-
                                                                   children: [
                                                                     Row(
                                                                       children: [
+                                                                        CircleAvatar(
+                                                                          radius:
+                                                                              13,
+                                                                          backgroundColor:
+                                                                              Colors.grey[300],
+                                                                          backgroundImage:
+                                                                              replyData['userPhotoBase64'] !=
+                                                                                      null &&
+                                                                                  replyData['userPhotoBase64'].toString().isNotEmpty
+                                                                              ? MemoryImage(
+                                                                                  base64Decode(
+                                                                                    replyData['userPhotoBase64'],
+                                                                                  ),
+                                                                                )
+                                                                              : replyData['userPhotoUrl'] !=
+                                                                                        null &&
+                                                                                    replyData['userPhotoUrl'].toString().isNotEmpty
+                                                                              ? NetworkImage(
+                                                                                  replyData['userPhotoUrl'],
+                                                                                )
+                                                                              : null,
+                                                                          child:
+                                                                              (replyData['userPhotoBase64'] ==
+                                                                                          null ||
+                                                                                      replyData['userPhotoBase64'].toString().isEmpty) &&
+                                                                                  (replyData['userPhotoUrl'] ==
+                                                                                          null ||
+                                                                                      replyData['userPhotoUrl'].toString().isEmpty)
+                                                                              ? const Icon(
+                                                                                  Icons.person,
+                                                                                  size: 15,
+                                                                                )
+                                                                              : null,
+                                                                        ),
+
+                                                                        const SizedBox(
+                                                                          width:
+                                                                              8,
+                                                                        ),
+
                                                                         Expanded(
                                                                           child: Text(
                                                                             replyData['name'] ??
@@ -1248,7 +1107,6 @@ class _DetailScreenState extends State<DetailScreen> {
                                                                             ),
                                                                           ),
                                                                         ),
-
                                                                         if (replyData['userId'] ==
                                                                             FirebaseAuth.instance.currentUser!.uid)
                                                                           IconButton(
@@ -1266,11 +1124,9 @@ class _DetailScreenState extends State<DetailScreen> {
                                                                           ),
                                                                       ],
                                                                     ),
-
                                                                     const SizedBox(
                                                                       height: 6,
                                                                     ),
-
                                                                     Text(
                                                                       replyData['reply'] ??
                                                                           '',
@@ -1310,6 +1166,133 @@ class _DetailScreenState extends State<DetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void showReplySheet(String commentId, String commentText) {
+    final replyController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 60,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                "Reply Comment",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 15),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  commentText,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Expanded(
+                child: TextField(
+                  controller: replyController,
+                  autofocus: true,
+                  expands: true,
+                  maxLines: null,
+                  minLines: null,
+                  textAlignVertical: TextAlignVertical.top,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Write your reply...",
+                    hintStyle: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).scaffoldBackgroundColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.all(20),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.send),
+                  label: const Text(
+                    "Send Reply",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  onPressed: () async {
+                    await addReply(commentId, replyController.text);
+
+                    if (!mounted) return;
+
+                    setState(() {
+                      expandedReplies[commentId] = true;
+                    });
+
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

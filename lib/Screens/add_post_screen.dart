@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,6 +9,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:jelajah_nusa/main.dart';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -21,23 +21,18 @@ class AddPostScreen extends StatefulWidget {
 class _AddPostScreenState extends State<AddPostScreen> {
   File? _image;
   String? _base64Image;
-
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-
   final ImagePicker _picker = ImagePicker();
 
   bool _isUploading = false;
-
   double? _latitude;
   double? _longitude;
-
   String currentDate = "";
 
   @override
   void initState() {
     super.initState();
-
     final now = DateTime.now();
     currentDate = "${now.day}/${now.month}/${now.year}";
   }
@@ -131,12 +126,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final pickedFile = await _picker.pickImage(source: source);
-
       if (pickedFile != null) {
         setState(() {
           _image = File(pickedFile.path);
         });
-
         await _compressAndEncodeImage();
       }
     } catch (e) {
@@ -146,15 +139,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   Future<void> _compressAndEncodeImage() async {
     if (_image == null) return;
-
     try {
       final compressedImage = await FlutterImageCompress.compressWithFile(
         _image!.path,
         quality: 50,
       );
-
       if (compressedImage == null) return;
-
       setState(() {
         _base64Image = base64Encode(compressedImage);
       });
@@ -175,33 +165,24 @@ class _AddPostScreenState extends State<AddPostScreen> {
       _showMessage('Silakan pilih lokasi terlebih dahulu');
       return;
     }
-
     setState(() => _isUploading = true);
-
     final user = FirebaseAuth.instance.currentUser;
-
     if (user == null) {
       setState(() => _isUploading = false);
       _showMessage('User not found.');
       return;
     }
-
     try {
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
-
       final userData = userDoc.data();
-
       final username =
           userData?['username'] ?? user.displayName ?? 'Unknown User';
-
       final userPhotoBase64 = userData?['photoBase64'];
       final userPhotoUrl = userData?['photoUrl'] ?? user.photoURL;
-
       String category = "Lainnya";
-
       final placemarks = await placemarkFromCoordinates(
         _latitude!,
         _longitude!,
@@ -230,10 +211,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
         'createdAt': Timestamp.now(),
       });
 
+      await showBasicNotification(
+        'Jelajah Nusa',
+        'Postingan wisata berhasil ditambahkan.',
+      );
       if (!mounted) return;
-
       Navigator.pop(context);
-
       _showMessage('Post uploaded successfully!');
     } catch (e) {
       debugPrint(e.toString());
@@ -350,7 +333,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              /// TOP BUTTON
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -425,10 +407,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
-
-              /// PHOTO CARD
               GestureDetector(
                 onTap: _showImageSourceDialog,
                 child: Container(
@@ -457,7 +436,6 @@ class _AddPostScreenState extends State<AddPostScreen> {
                           ).colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
-
                       Expanded(
                         child: Center(
                           child: _image != null
@@ -493,26 +471,19 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
               _buildTextField(
                 hint: 'Caption',
                 controller: _titleController,
                 maxLength: 30,
               ),
-
               const SizedBox(height: 24),
-
               _buildTextField(
                 hint: 'Description',
                 controller: _descriptionController,
                 maxLines: 5,
               ),
-
               const SizedBox(height: 24),
-
-              /// DATE
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -543,10 +514,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 80),
-
-              /// POST BUTTON
               SizedBox(
                 height: 70,
                 child: ElevatedButton(

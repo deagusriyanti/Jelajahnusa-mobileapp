@@ -17,7 +17,6 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
-
   final ImagePicker _picker = ImagePicker();
 
   bool _isLoading = false;
@@ -53,7 +52,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source);
-
     if (pickedFile == null) return;
 
     final file = File(pickedFile.path);
@@ -69,6 +67,92 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _photoBase64 = base64Encode(compressed);
       _photoUrl = null;
     });
+  }
+
+  Future<void> _saveProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final newUsername = _usernameController.text.trim();
+
+    if (newUsername.isEmpty) {
+      _showMessage('Username tidak boleh kosong');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+            'username': newUsername,
+            'phone': _phoneController.text.trim(),
+            'photoBase64': _photoBase64,
+            'photoUrl': _photoUrl,
+          });
+
+      final posts = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('uid', isEqualTo: user.uid)
+          .get();
+
+      for (final post in posts.docs) {
+        await post.reference.update({
+          'fullName': newUsername,
+          'userPhotoBase64': _photoBase64,
+          'userPhotoUrl': _photoUrl,
+        });
+      }
+
+      final allPosts = await FirebaseFirestore.instance
+          .collection('posts')
+          .get();
+
+      for (final post in allPosts.docs) {
+        final comments = await post.reference
+            .collection('comments')
+            .where('userId', isEqualTo: user.uid)
+            .get();
+
+        for (final comment in comments.docs) {
+          await comment.reference.update({
+            'name': newUsername,
+            'userPhotoBase64': _photoBase64,
+            'userPhotoUrl': _photoUrl,
+          });
+        }
+
+        final allComments = await post.reference.collection('comments').get();
+
+        for (final comment in allComments.docs) {
+          final replies = await comment.reference
+              .collection('replies')
+              .where('userId', isEqualTo: user.uid)
+              .get();
+
+          for (final reply in replies.docs) {
+            await reply.reference.update({
+              'name': newUsername,
+              'userPhotoBase64': _photoBase64,
+              'userPhotoUrl': _photoUrl,
+            });
+          }
+        }
+      }
+
+      await user.updateDisplayName(newUsername);
+
+      if (!mounted) return;
+
+      _showMessage('Profil berhasil diperbarui');
+      Navigator.pop(context, true);
+    } catch (e) {
+      _showMessage('Gagal memperbarui profil');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _showImageSourceSheet() {
@@ -117,54 +201,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       },
     );
-  }
-
-  Future<void> _saveProfile() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    if (_usernameController.text.trim().isEmpty) {
-      _showMessage('Username tidak boleh kosong');
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
-            'username': _usernameController.text.trim(),
-            'phone': _phoneController.text.trim(),
-            'photoBase64': _photoBase64,
-            'photoUrl': _photoUrl,
-          });
-
-      final posts = await FirebaseFirestore.instance
-          .collection('posts')
-          .where('uid', isEqualTo: user.uid)
-          .get();
-
-      for (final post in posts.docs) {
-        await post.reference.update({
-          'fullName': _usernameController.text.trim(),
-          'userPhotoBase64': _photoBase64,
-          'userPhotoUrl': _photoUrl,
-        });
-      }
-
-      await user.updateDisplayName(_usernameController.text.trim());
-
-      if (!mounted) return;
-
-      _showMessage('Profil berhasil diperbarui');
-      Navigator.pop(context, true);
-    } catch (e) {
-      _showMessage('Gagal memperbarui profil');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   InputDecoration _inputDecoration(String label) {
@@ -258,13 +294,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           )
                         : null,
                   ),
-                  Positioned(
+                  const Positioned(
                     right: 0,
                     bottom: 0,
                     child: CircleAvatar(
                       radius: 16,
-                      backgroundColor: const Color(0xFF007C89),
-                      child: const Icon(
+                      backgroundColor: Color(0xFF007C89),
+                      child: Icon(
                         Icons.camera_alt,
                         size: 17,
                         color: Colors.white,

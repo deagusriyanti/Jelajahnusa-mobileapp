@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +22,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-
             const Text(
               'Likes',
               style: TextStyle(
@@ -32,7 +30,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                 color: Color(0xFF007C89),
               ),
             ),
-
             const SizedBox(height: 30),
 
             Expanded(
@@ -45,7 +42,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-
                   final posts = snapshot.data!.docs;
 
                   if (posts.isEmpty) {

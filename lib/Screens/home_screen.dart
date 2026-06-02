@@ -64,20 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  ImageProvider? getProfileImage(Map<String, dynamic> data) {
-    if (data['userPhotoBase64'] != null &&
-        data['userPhotoBase64'].toString().isNotEmpty) {
-      return MemoryImage(base64Decode(data['userPhotoBase64']));
-    }
-
-    if (data['userPhotoUrl'] != null &&
-        data['userPhotoUrl'].toString().isNotEmpty) {
-      return NetworkImage(data['userPhotoUrl']);
-    }
-
-    return null;
-  }
-
   DateTime getCreatedAt(Map<String, dynamic> data) {
     final createdAt = data['createdAt'];
 
@@ -86,6 +72,104 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return DateTime.now();
+  }
+
+  ImageProvider? getProfileImageFromUser(Map<String, dynamic>? userData) {
+    if (userData == null) return null;
+
+    final photoBase64 = userData['photoBase64'];
+    final photoUrl = userData['photoUrl'];
+
+    if (photoBase64 != null && photoBase64.toString().isNotEmpty) {
+      return MemoryImage(base64Decode(photoBase64));
+    }
+
+    if (photoUrl != null && photoUrl.toString().isNotEmpty) {
+      return NetworkImage(photoUrl);
+    }
+
+    return null;
+  }
+
+  Widget buildUserInfo({
+    required Map<String, dynamic> postData,
+    required String postCategory,
+  }) {
+    final uid = postData['uid'];
+
+    if (uid == null || uid.toString().isEmpty) {
+      return _userInfoContent(
+        username: postData['fullName'] ?? 'Unknown User',
+        category: postCategory,
+        profileImage: null,
+      );
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .snapshots(),
+      builder: (context, userSnapshot) {
+        Map<String, dynamic>? userData;
+
+        if (userSnapshot.hasData && userSnapshot.data!.exists) {
+          userData = userSnapshot.data!.data() as Map<String, dynamic>;
+        }
+
+        final username =
+            userData?['username'] ?? postData['fullName'] ?? 'Unknown User';
+
+        final profileImage = getProfileImageFromUser(userData);
+
+        return _userInfoContent(
+          username: username,
+          category: postCategory,
+          profileImage: profileImage,
+        );
+      },
+    );
+  }
+
+  Widget _userInfoContent({
+    required String username,
+    required String category,
+    required ImageProvider? profileImage,
+  }) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: Theme.of(context).cardColor,
+          backgroundImage: profileImage,
+          child: profileImage == null
+              ? const Icon(Icons.person, size: 22, color: Color(0xFF005B7F))
+              : null,
+        ),
+
+        const SizedBox(width: 10),
+
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              username,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Color(0xFF005B7F),
+              ),
+            ),
+
+            if (category.toString().isNotEmpty)
+              Text(
+                category,
+                style: const TextStyle(color: Colors.teal, fontSize: 13),
+              ),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -183,16 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             posts[index].data() as Map<String, dynamic>;
 
                         final String postId = posts[index].id;
-
-                        final String fullName =
-                            data['fullName'] ?? 'Unknown User';
-
                         final String title = data['title'] ?? '';
-
                         final String imageBase64 = data['image'] ?? '';
-
                         final String description = data['description'] ?? '';
-
                         final DateTime createdAt = getCreatedAt(data);
 
                         final double latitude = (data['latitude'] ?? 0.0)
@@ -202,19 +279,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             .toDouble();
 
                         final String category = data['category'] ?? '';
-
                         final List likedBy = data['likedBy'] ?? [];
-
                         final int likes = data['likes'] ?? 0;
-
                         final String heroTag = 'image-$postId';
-
-                        final ImageProvider? profileImage = getProfileImage(
-                          data,
-                        );
 
                         return GestureDetector(
                           onTap: () {
+                            final fullName = data['fullName'] ?? 'Unknown User';
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -246,48 +318,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   child: Row(
                                     children: [
-                                      CircleAvatar(
-                                        radius: 18,
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).cardColor,
-                                        backgroundImage: profileImage,
-                                        child: profileImage == null
-                                            ? const Icon(
-                                                Icons.person,
-                                                size: 22,
-                                                color: Color(0xFF005B7F),
-                                              )
-                                            : null,
+                                      Expanded(
+                                        child: buildUserInfo(
+                                          postData: data,
+                                          postCategory: category,
+                                        ),
                                       ),
-
-                                      const SizedBox(width: 10),
-
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            fullName,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Color(0xFF005B7F),
-                                            ),
-                                          ),
-
-                                          if (category.toString().isNotEmpty)
-                                            Text(
-                                              category,
-                                              style: const TextStyle(
-                                                color: Colors.teal,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-
-                                      const Spacer(),
 
                                       Text(
                                         formatTime(createdAt),

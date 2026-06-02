@@ -39,11 +39,9 @@ class _EditScreenState extends State<EditScreen> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-
   final ImagePicker _picker = ImagePicker();
 
   bool _isUploading = false;
-
   double? _latitude;
   double? _longitude;
 
@@ -53,9 +51,7 @@ class _EditScreenState extends State<EditScreen> {
 
     _titleController.text = widget.title;
     _descriptionController.text = widget.description;
-
     _base64Image = widget.imageBase64;
-
     _latitude = widget.latitude;
     _longitude = widget.longitude;
   }
@@ -63,12 +59,10 @@ class _EditScreenState extends State<EditScreen> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final pickedFile = await _picker.pickImage(source: source);
-
       if (pickedFile != null) {
         setState(() {
           _image = File(pickedFile.path);
         });
-
         await _compressAndEncodeImage();
       }
     } catch (e) {
@@ -78,14 +72,11 @@ class _EditScreenState extends State<EditScreen> {
 
   Future<void> _compressAndEncodeImage() async {
     if (_image == null) return;
-
     final compressedImage = await FlutterImageCompress.compressWithFile(
       _image!.path,
       quality: 50,
     );
-
     if (compressedImage == null) return;
-
     setState(() {
       _base64Image = base64Encode(compressedImage);
     });
@@ -141,11 +132,9 @@ class _EditScreenState extends State<EditScreen> {
       );
       return;
     }
-
     setState(() {
       _isUploading = true;
     });
-
     try {
       await FirebaseFirestore.instance
           .collection('posts')
@@ -159,15 +148,12 @@ class _EditScreenState extends State<EditScreen> {
           });
 
       if (!mounted) return;
-
       Navigator.pop(context);
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Postingan berhasil diperbarui")),
       );
     } catch (e) {
       debugPrint(e.toString());
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -299,7 +285,6 @@ class _EditScreenState extends State<EditScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
 
               GestureDetector(
@@ -366,25 +351,19 @@ class _EditScreenState extends State<EditScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
               _buildTextField(
                 hint: "Caption",
                 controller: _titleController,
                 maxLength: 30,
               ),
-
               const SizedBox(height: 24),
-
               _buildTextField(
                 hint: "Description",
                 controller: _descriptionController,
                 maxLines: 5,
               ),
-
               const SizedBox(height: 80),
-
               SizedBox(
                 height: 70,
                 child: ElevatedButton(
